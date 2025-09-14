@@ -169,10 +169,10 @@
         const card=document.createElement('div'); card.className='card';
         let inputHtml="";
         if(q.kind==='div'){
-          inputHtml=`<input type="number" placeholder="商" data-sub="q" data-idx="${idx}" />
-                     <input type="number" placeholder="餘數" data-sub="r" data-idx="${idx}" />`;
+          inputHtml=`<input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="商" data-sub="q" data-idx="${idx}" />
+                     <input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="餘數" data-sub="r" data-idx="${idx}" />`;
         }else{
-          inputHtml=`<input type="number" data-sub="ans" data-idx="${idx}" />`;
+          inputHtml=`<input type="number" inputmode="numeric" pattern="[0-9]*" data-sub="ans" data-idx="${idx}" />`;
         }
         card.innerHTML=`
           <div class="q-title"><span class="badge">第 ${idx+1} 題</span><span class="badge" data-role="flag"></span></div>
@@ -193,9 +193,7 @@
       if(e.key!=='Enter')return; const inp=e.target.closest('input[type="number"]');
       if(!inp)return; e.preventDefault();
       const idx=+inp.dataset.idx; const sub=inp.dataset.sub;
-      // 若有輸入值則檢查
       if(inp.value.trim()!=='') checkOne(idx,true);
-      // 找下一個輸入
       let next;
       if(sub==='q') next=$(`#quiz input[data-idx="${idx}"][data-sub="r"]`);
       else next=$(`#quiz input[data-idx="${idx+1}"][data-sub]`);

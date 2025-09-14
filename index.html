@@ -152,7 +152,7 @@
           b=rand(1,Math.min(max,12)); a=rand(min,max);
           const quotient=Math.floor(a/b); const remainder=a%b;
           expr=`${a} ÷ ${b} = (商 ___, 餘數 ___)`;
-          ans={q:quotient,r:remainder};
+          ans={q:quotient,r:remainder,divisor:b};
         }
         const key=keyFor(op,a,b);
         if(seen.has(key)) continue; seen.add(key);
@@ -181,7 +181,7 @@
           <div class="reveal-text" data-role="reveal"></div>`;
         host.appendChild(card);
       });
-      host.onclick=onCardClick;
+      host.onclick=onCardClick; host.onkeydown=onKeyEnterNext;
     }
 
     function onCardClick(e){
@@ -189,14 +189,27 @@
       if(!btn)return; const idx=+btn.dataset.idx; checkOne(idx);
     }
 
-    function checkOne(idx){
+    function onKeyEnterNext(e){
+      if(e.key!=='Enter')return; const inp=e.target.closest('input[type="number"]');
+      if(!inp)return; e.preventDefault();
+      const idx=+inp.dataset.idx; const sub=inp.dataset.sub;
+      // 若有輸入值則檢查
+      if(inp.value.trim()!=='') checkOne(idx,true);
+      // 找下一個輸入
+      let next;
+      if(sub==='q') next=$(`#quiz input[data-idx="${idx}"][data-sub="r"]`);
+      else next=$(`#quiz input[data-idx="${idx+1}"][data-sub]`);
+      if(next) next.focus(); else $('#btnSubmit').focus();
+    }
+
+    function checkOne(idx,silent=false){
       const card=$$('#quiz .card')[idx]; const flag=card.querySelector('[data-role="flag"]');
       const q=currentQs[idx]; let ok=false;
       if(q.kind==='div'){
         const qVal=card.querySelector('input[data-sub="q"]').value.trim();
         const rVal=card.querySelector('input[data-sub="r"]').value.trim();
         if(qVal!=='' && rVal!==''){
-          ok=(Number(qVal)===q.answer.q && Number(rVal)===q.answer.r);
+          ok=(Number(qVal)===q.answer.q && Number(rVal)===q.answer.r && Number(rVal)<q.answer.divisor);
         }
       }else{
         const val=card.querySelector('input[data-sub="ans"]').value.trim();
@@ -207,7 +220,7 @@
     }
 
     function submitAll(){
-      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i)) score++; });
+      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i,true)) score++; });
       const total=currentQs.length; const pct=Math.round(score/total*100);
       $('#scoreText').textContent=`成績：${score} / ${total}（${pct}%）`; $('#meter').style.width=pct+'%';
     }

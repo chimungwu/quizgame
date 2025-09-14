@@ -93,6 +93,7 @@
         </div>
         <button id="btnStart">開始出題</button>
       </div>
+      <div class="hint">＊題目數字範圍可以自訂為1-1000之間。</div>
       <div class="hint">＊除法會同時顯示「商」與「餘數」。平方根會以「可整開」為主（如 4, 9, 16, …）。</div>
     </section>
 
@@ -129,7 +130,7 @@
     }
 
     function makeQuestions({type,min,max,count}){
-      min = clamp(min,1,100); max = clamp(max,1,100); if(min>max) [min,max]=[max,min];
+      min = clamp(min,1,1000); max = clamp(max,1,1000); if(min>max) [min,max]=[max,min];
       const qs=[]; const seen=new Set();
 
       const keyFor=(op,a,b)=>`${op}:${a},${b}`;

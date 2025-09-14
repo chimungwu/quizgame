@@ -88,8 +88,6 @@
           </select>
         </div>
         <button id="btnStart">開始出題</button>
-        <button id="btnSubmit" class="ghost">交卷批改</button>
-        <button id="btnReveal" class="ghost">顯示答案</button>
       </div>
       <div class="hint">＊除法會同時顯示「商」與「餘數」。平方根會以「可整開」為主（如 4, 9, 16, …）。</div>
     </section>
@@ -100,6 +98,10 @@
         <strong id="scoreText">尚未交卷</strong>
         <span class="badge" id="progress">0 / 0 完成</span>
         <div class="meter" style="flex:1; min-width:200px"><i id="meter"></i></div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+        <button id="btnSubmit" class="ghost">交卷批改</button>
+        <button id="btnReveal" class="ghost">顯示答案</button>
       </div>
     </section>
   </div>

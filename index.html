@@ -3,151 +3,265 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>平方測驗 - 自訂範圍與題數</title>
+  <title>數學練習（台灣學童版）—方塊題卡</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans TC, Arial, sans-serif; padding: 20px; background: #f5f7fa; color: #222; }
-    h1 { margin: 0 0 10px; }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-    .group { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 10px; display: inline-flex; align-items: center; gap: 6px; }
-    .group label { color: #555; font-size: 14px; }
-    input[type=number], select { width: 80px; padding: 6px 8px; border: 1px solid #cfd6e1; border-radius: 8px; }
-    button { padding: 8px 14px; border: 0; border-radius: 999px; background: #2563eb; color: #fff; cursor: pointer; }
-    button.secondary { background: #6b7280; }
-    .question { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; margin: 8px 0; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
-    .question input[type=number] { width: 140px; }
-    .correct { color: #10b981; }
-    .wrong { color: #ef4444; }
-    #quiz { margin-top: 8px; }
-    #result { margin-top: 14px; }
-    .muted { color: #6b7280; font-size: 14px; }
+    :root{
+      --bg:#f6f8fb; --card:#ffffff; --ink:#1f2937; --muted:#6b7280; --accent:#2563eb;
+      --ok:#16a34a; --err:#dc2626; --warn:#f59e0b; --ring:rgba(37,99,235,.15);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink)}
+    .wrap{max-width:980px;margin:auto; padding:20px}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    h1{font-size:clamp(20px,3.4vw,28px);margin:0}
+    .sub{color:var(--muted); font-size:14px}
+
+    .panel{margin-top:12px; background:var(--card); border:1px solid #e5e7eb; border-radius:var(--radius); padding:14px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .group{display:flex;align-items:center;gap:6px; background:#f9fafb; border:1px solid #e5e7eb; padding:8px 10px; border-radius:12px}
+    label{color:#374151;font-size:14px}
+    select,input[type=number]{padding:8px 10px; border:1px solid #cfd6e1; border-radius:10px; background:#fff; min-width:80px}
+    button{appearance:none;border:0;border-radius:999px; padding:10px 16px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer}
+    button.ghost{background:transparent;color:#374151;border:1px solid #d1d5db}
+
+    .grid{display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:12px}
+    @media(min-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(min-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px; box-shadow:0 1px 0 #f3f4f6}
+    .q-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .badge{font-size:12px;color:#6b7280;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px}
+    .expr{font-size:22px; font-weight:700; letter-spacing:.4px}
+    .ans{margin-top:8px; display:flex; gap:8px; align-items:center}
+    .ans input{flex:1; padding:10px 12px; border:1px solid #cfd6e1; border-radius:10px}
+    .flag{font-size:12px;color:#6b7280}
+    .flag.ok{color:var(--ok)}
+    .flag.err{color:var(--err)}
+
+    .reveal-text{margin-top:6px;font-size:13px;color:#047857}
+
+    .summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .meter{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden}
+    .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e,#4ade80)}
+
+    .hint{margin-top:6px;font-size:12px;color:#6b7280}
   </style>
 </head>
 <body>
-  <h1>平方測驗</h1>
-  <div class="controls">
-    <div class="group">
-      <label for="min">範圍</label>
-      <input id="min" type="number" value="1" min="1" max="100" />
-      <span>到</span>
-      <input id="max" type="number" value="100" min="1" max="100" />
-    </div>
-    <div class="group">
-      <label for="count">題數</label>
-      <select id="count">
-        <option value="5">5</option>
-        <option value="10" selected>10</option>
-        <option value="15">15</option>
-        <option value="20">20</option>
-      </select>
-    </div>
-    <button id="startBtn">開始測驗</button>
-    <span class="muted">（範圍僅限 1–100；題目隨機且不重複）</span>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>數學練習（台灣學童版）</h1>
+        <div class="sub">題目以「方塊題卡」呈現，適合國小～國中。支援：平方、平方根、四則（可選混合）。</div>
+      </div>
+      <div class="sub">小技巧：輸入答案後按 Enter 會跳到下一題。</div>
+    </header>
+
+    <section class="panel">
+      <div class="controls" role="group" aria-label="設定">
+        <div class="group">
+          <label for="type">題型</label>
+          <select id="type">
+            <option value="square">平方（n²）</option>
+            <option value="squareroot">平方根（√n）</option>
+            <option value="add">加法</option>
+            <option value="sub">減法</option>
+            <option value="mul">乘法</option>
+            <option value="div">除法（整除）</option>
+            <option value="mix4">混合四則</option>
+          </select>
+        </div>
+        <div class="group">
+          <label for="min">範圍</label>
+          <input id="min" type="number" value="1" min="1" max="100" />
+          <span>到</span>
+          <input id="max" type="number" value="20" min="1" max="100" />
+        </div>
+        <div class="group">
+          <label for="count">題數</label>
+          <select id="count">
+            <option>5</option>
+            <option selected>10</option>
+            <option>15</option>
+            <option>20</option>
+          </select>
+        </div>
+        <button id="btnStart">開始出題</button>
+        <button id="btnSubmit" class="ghost">交卷批改</button>
+        <button id="btnReveal" class="ghost">顯示答案</button>
+      </div>
+      <div class="hint">＊除法預設為整除題（沒有小數），會自動生成可整除的算式。平方根會以「可整開」為主（如 4, 9, 16, …）。</div>
+    </section>
+
+    <section class="panel">
+      <div id="quiz" class="grid" aria-live="polite"></div>
+      <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+        <strong id="scoreText">尚未交卷</strong>
+        <span class="badge" id="progress">0 / 0 完成</span>
+        <div class="meter" style="flex:1; min-width:200px"><i id="meter"></i></div>
+      </div>
+    </section>
   </div>
 
-  <form id="quiz"></form>
-  <div id="result"></div>
-
   <script>
-    let questions = [];
+    // ====== 工具函式 ======
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => [...document.querySelectorAll(sel)];
+    const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
+    const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 
-    function clampRangeInputs(){
-      const minEl = document.getElementById('min');
-      const maxEl = document.getElementById('max');
-      let min = parseInt(minEl.value || '1', 10);
-      let max = parseInt(maxEl.value || '100', 10);
-      // 將輸入限制在 1..100
-      min = Math.min(100, Math.max(1, min));
-      max = Math.min(100, Math.max(1, max));
-      // 確保 min <= max
-      if (min > max) [min, max] = [max, min];
-      minEl.value = String(min);
-      maxEl.value = String(max);
-      return {min, max};
+    function sampleDistinct(min,max,count){
+      const size = max-min+1; if (count>size) count = size;
+      const set = new Set(); while(set.size<count){ set.add(rand(min,max)); }
+      return [...set];
     }
 
-    function startQuiz(){
-      const {min, max} = clampRangeInputs();
-      const count = parseInt(document.getElementById('count').value, 10);
+    function perfectSquaresIn(min,max){
+      const arr=[]; const s= Math.ceil(Math.sqrt(min)); const e = Math.floor(Math.sqrt(max));
+      for(let n=s;n<=e;n++) arr.push(n*n);
+      return arr;
+    }
 
-      const rangeSize = max - min + 1;
-      if (count > rangeSize){
-        alert(`題數（${count}）不可超過範圍內可用數量（${rangeSize}）。\n請放大範圍或降低題數。`);
-        return;
+    function pickDistinct(arr,count){
+      const used=new Set(); const out=[]; const L=arr.length; if(L===0) return out;
+      while(out.length<count && used.size<L){ const i=rand(0,L-1); if(used.has(i)) continue; used.add(i); out.push(arr[i]); }
+      return out;
+    }
+
+    function keyFor(op,a,b){
+      if(op==='add' || op==='mul'){
+        const x=a<b?a:b, y=a<b?b:a; return op+':'+x+','+y; // 交換律去重
+      }
+      return op+':'+a+','+b; // 減法、除法不交換
+    }
+
+    // ====== 題目生成器（保證不重複） ======
+    function makeQuestions({type,min,max,count}){
+      min = clamp(min,1,100); max = clamp(max,1,100); if(min>max) [min,max]=[max,min];
+      const qs=[];
+
+      if(type==='square'){
+        const pool = sampleDistinct(min,max,count);
+        pool.forEach(n=>qs.push({kind:'square',text:`${n} 的平方 =`,answer:n*n}));
+        return qs;
       }
 
-      // 產生不重複隨機題目
-      const set = new Set();
-      while (set.size < count){
-        set.add(Math.floor(Math.random() * rangeSize) + min);
+      if(type==='squareroot'){
+        const ps = perfectSquaresIn(min,max);
+        if(ps.length===0){ alert('這個範圍內沒有可以整開的平方數，請調整範圍。'); return []; }
+        pickDistinct(ps,count).forEach(v=>qs.push({kind:'squareroot',text:`√${v} =`,answer:Math.sqrt(v)}));
+        return qs;
       }
-      questions = [...set];
 
-      // 顯示題目
-      const quiz = document.getElementById('quiz');
-      quiz.innerHTML = '';
-      questions.forEach((q,i)=>{
-        const div = document.createElement('div');
-        div.className = 'question';
-        div.innerHTML = `
-          <label for="ans${i}">${i+1}. <strong>${q}</strong> 的平方 =</label>
-          <input type="number" id="ans${i}" name="ans${i}" inputmode="numeric" />
-        `;
-        quiz.appendChild(div);
+      // 四則與混合：用 Set 去重
+      const ops = type==='mix4' ? ['add','sub','mul','div'] : [type];
+      const seen = new Set();
+      let attempts = 0; const LIMIT = count*80; // 嘗試上限避免無限迴圈
+      while(qs.length < count && attempts < LIMIT){
+        attempts++;
+        const op = ops[rand(0,ops.length-1)];
+        let a,b,expr,ans;
+        if(op==='add'){
+          a=rand(min,max); b=rand(min,max); expr=`${a} + ${b} =`; ans=a+b;
+        } else if(op==='sub'){
+          a=rand(min,max); b=rand(min,max); if(a<b)[a,b]=[b,a]; expr=`${a} − ${b} =`; ans=a-b;
+        } else if(op==='mul'){
+          a=rand(min,max); b=rand(min,max); expr=`${a} × ${b} =`; ans=a*b;
+        } else if(op==='div'){
+          b=rand(Math.max(1,Math.min(max,Math.max(1,min))), Math.max(1,Math.min(max,12))); // 除數不過大
+          const low=Math.max(1,Math.ceil(min/b)), high=Math.max(low,Math.floor(max/b));
+          const k=rand(low,high); a=b*k; expr=`${a} ÷ ${b} =`; ans=a/b;
+        }
+        const key = keyFor(op,a,b);
+        if(seen.has(key)) continue; // 去重
+        seen.add(key);
+        qs.push({kind:op,text:expr,answer:ans});
+      }
+      if(qs.length < count){
+        alert('在此範圍內無法產生足夠的不重複題目，請放大範圍或降低題數。');
+      }
+      return qs;
+    }
+
+    // ====== 渲染 & 互動 ======
+    let currentQs=[];
+
+    function renderQuiz(qs){
+      const host=$('#quiz'); host.innerHTML='';
+      qs.forEach((q,idx)=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML=`
+          <div class="q-title"><span class="badge">第 ${idx+1} 題</span><span class="badge" data-role="flag"></span></div>
+          <div class="expr">${q.text}</div>
+          <div class="ans">
+            <input type="number" inputmode="numeric" aria-label="第 ${idx+1} 題答案" data-idx="${idx}" />
+            <button class="ghost" data-act="check" data-idx="${idx}">檢查</button>
+          </div>
+          <div class="reveal-text" data-role="reveal"></div>`;
+        host.appendChild(card);
       });
-
-      // 加入提交按鈕
-      const actions = document.createElement('div');
-      actions.style.marginTop = '10px';
-      const submitBtn = document.createElement('button');
-      submitBtn.type = 'button';
-      submitBtn.textContent = '交卷';
-      submitBtn.className = 'secondary';
-      submitBtn.onclick = checkAnswers;
-      actions.appendChild(submitBtn);
-      quiz.appendChild(actions);
-
-      document.getElementById('result').innerHTML = '';
-      // 聚焦第一題
-      document.getElementById('ans0')?.focus();
+      host.onclick=onCardClick; host.onkeydown=onKeyEnterNext;
+      updateProgress();
     }
 
-    function checkAnswers(){
-      const quiz = document.getElementById('quiz');
-      const result = document.getElementById('result');
-      result.innerHTML = '';
+    function onCardClick(e){
+      const btn=e.target.closest('button[data-act="check"]');
+      if(!btn)return; const idx=+btn.dataset.idx; checkOne(idx);
+    }
 
-      let score = 0;
-      const details = [];
+    function onKeyEnterNext(e){
+      if(e.key!=='Enter')return; const inp=e.target.closest('input[type="number"]');
+      if(!inp)return; e.preventDefault();
+      const idx=+inp.dataset.idx; if(inp.value.trim()!=='')checkOne(idx,true);
+      const next=$(`#quiz input[data-idx="${idx+1}"]`); if(next)next.focus(); else $('#btnSubmit').focus();
+      updateProgress();
+    }
 
-      questions.forEach((q,i)=>{
-        const input = document.getElementById(`ans${i}`);
-        const val = input && input.value.trim() !== '' ? Number(input.value) : NaN;
-        const correct = q*q;
-        if (val === correct){
-          score++;
-          details.push(`<div class='correct'>第 ${i+1} 題 ✔ 正確</div>`);
-        } else {
-          details.push(`<div class='wrong'>第 ${i+1} 題 ✘ 錯誤，正確答案是 <strong>${correct}</strong></div>`);
+    function updateProgress(){
+      const total=currentQs.length; const filled=$$('#quiz input').filter(i=>i.value.trim()!=='').length;
+      $('#progress').textContent=`${filled} / ${total} 完成`;
+    }
+
+    function checkOne(idx,silent=false){
+      const card=$$('#quiz .card')[idx]; const input=card.querySelector('input'); const flag=card.querySelector('[data-role="flag"]');
+      const val=input.value.trim(); if(val===''){if(!silent){flag.textContent='未作答';flag.className='badge';}return;}
+      const ok=Number(val)===Number(currentQs[idx].answer);
+      flag.textContent=ok?'✔ 正確':'✘ 錯誤'; flag.className='badge '+(ok?'flag ok':'flag err');
+      return ok;
+    }
+
+    function submitAll(){
+      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i,true)) score++; });
+      const total=currentQs.length; const pct=Math.round(score/total*100);
+      $('#scoreText').textContent=`成績：${score} / ${total}（${pct}%）`; $('#meter').style.width=pct+'%';
+    }
+
+    function reveal(){
+      $$('#quiz .card').forEach((card,i)=>{
+        const show=card.querySelector('[data-role="reveal"]');
+        const input=card.querySelector('input');
+        const correct=currentQs[i]?.answer;
+        if(show&&typeof correct!== 'undefined'){
+          show.textContent=`正解：${correct}`;
+          if(input && input.value.trim()===''){
+            input.placeholder=correct;
+          }
         }
       });
-
-      const total = questions.length;
-      const percent = Math.round(score / total * 100);
-      result.innerHTML = `<h3>你的分數：${score} / ${total}（${percent}%）</h3>` + details.join('');
+      // 不改動分數與進度
     }
 
-    // 事件綁定與輸入限制監控
-    document.getElementById('startBtn').addEventListener('click', startQuiz);
-    ['min','max'].forEach(id => {
-      const el = document.getElementById(id);
-      el.addEventListener('change', clampRangeInputs);
-      el.addEventListener('blur', clampRangeInputs);
-      el.addEventListener('input', ()=>{
-        // 只允許數字，並避免無限長度
-        const cleaned = el.value.replace(/[^0-9]/g, '').slice(0,3);
-        el.value = cleaned;
-      });
-    });
+    // ====== 事件綁定 ======
+    $('#btnStart').onclick=()=>{
+      const type=$('#type').value; let min=parseInt($('#min').value||'1',10); let max=parseInt($('#max').value||'100',10);
+      min=clamp(min,1,100); max=clamp(max,1,100); if(min>max)[min,max]=[max,min];
+      const count=parseInt($('#count').value,10);
+      currentQs=makeQuestions({type,min,max,count});
+      renderQuiz(currentQs); $('#scoreText').textContent='尚未交卷'; $('#meter').style.width='0%';
+    };
+    $('#btnSubmit').onclick=submitAll;
+    $('#btnReveal').onclick=reveal;
   </script>
 </body>
 </html>

@@ -68,7 +68,7 @@
             <option value="add">加法</option>
             <option value="sub">減法</option>
             <option value="mul">乘法</option>
-            <option value="div">除法（整除）</option>
+            <option value="div">除法（含餘數）</option>
             <option value="mix4">混合四則</option>
           </select>
         </div>
@@ -91,7 +91,7 @@
         <button id="btnSubmit" class="ghost">交卷批改</button>
         <button id="btnReveal" class="ghost">顯示答案</button>
       </div>
-      <div class="hint">＊除法預設為整除題（沒有小數），會自動生成可整除的算式。平方根會以「可整開」為主（如 4, 9, 16, …）。</div>
+      <div class="hint">＊除法會同時顯示「商」與「餘數」。平方根會以「可整開」為主（如 4, 9, 16, …）。</div>
     </section>
 
     <section class="panel">
@@ -105,7 +105,6 @@
   </div>
 
   <script>
-    // ====== 工具函式 ======
     const $ = sel => document.querySelector(sel);
     const $$ = sel => [...document.querySelectorAll(sel)];
     const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
@@ -123,86 +122,66 @@
       return arr;
     }
 
-    function pickDistinct(arr,count){
-      const used=new Set(); const out=[]; const L=arr.length; if(L===0) return out;
-      while(out.length<count && used.size<L){ const i=rand(0,L-1); if(used.has(i)) continue; used.add(i); out.push(arr[i]); }
-      return out;
-    }
-
-    function keyFor(op,a,b){
-      if(op==='add' || op==='mul'){
-        const x=a<b?a:b, y=a<b?b:a; return op+':'+x+','+y; // 交換律去重
-      }
-      return op+':'+a+','+b; // 減法、除法不交換
-    }
-
-    // ====== 題目生成器（保證不重複） ======
     function makeQuestions({type,min,max,count}){
       min = clamp(min,1,100); max = clamp(max,1,100); if(min>max) [min,max]=[max,min];
-      const qs=[];
+      const qs=[]; const seen=new Set();
+
+      const keyFor=(op,a,b)=>`${op}:${a},${b}`;
 
       if(type==='square'){
-        const pool = sampleDistinct(min,max,count);
-        pool.forEach(n=>qs.push({kind:'square',text:`${n} 的平方 =`,answer:n*n}));
+        sampleDistinct(min,max,count).forEach((n)=>qs.push({kind:'square',text:`${n} 的平方 =`,answer:n*n}));
         return qs;
       }
 
       if(type==='squareroot'){
         const ps = perfectSquaresIn(min,max);
-        if(ps.length===0){ alert('這個範圍內沒有可以整開的平方數，請調整範圍。'); return []; }
-        pickDistinct(ps,count).forEach(v=>qs.push({kind:'squareroot',text:`√${v} =`,answer:Math.sqrt(v)}));
+        if(ps.length===0){ alert('範圍內沒有可以整開的平方數'); return []; }
+        ps.slice(0,count).forEach(v=>qs.push({kind:'squareroot',text:`√${v} =`,answer:Math.sqrt(v)}));
         return qs;
       }
 
-      // 四則與混合：用 Set 去重
-      const ops = type==='mix4' ? ['add','sub','mul','div'] : [type];
-      const seen = new Set();
-      let attempts = 0; const LIMIT = count*80; // 嘗試上限避免無限迴圈
-      while(qs.length < count && attempts < LIMIT){
+      const ops = type==='mix4'?['add','sub','mul','div']:[type];
+      let attempts=0; const LIMIT=count*50;
+      while(qs.length<count && attempts<LIMIT){
         attempts++;
-        const op = ops[rand(0,ops.length-1)];
-        let a,b,expr,ans;
-        if(op==='add'){
-          a=rand(min,max); b=rand(min,max); expr=`${a} + ${b} =`; ans=a+b;
-        } else if(op==='sub'){
-          a=rand(min,max); b=rand(min,max); if(a<b)[a,b]=[b,a]; expr=`${a} − ${b} =`; ans=a-b;
-        } else if(op==='mul'){
-          a=rand(min,max); b=rand(min,max); expr=`${a} × ${b} =`; ans=a*b;
-        } else if(op==='div'){
-          b=rand(Math.max(1,Math.min(max,Math.max(1,min))), Math.max(1,Math.min(max,12))); // 除數不過大
-          const low=Math.max(1,Math.ceil(min/b)), high=Math.max(low,Math.floor(max/b));
-          const k=rand(low,high); a=b*k; expr=`${a} ÷ ${b} =`; ans=a/b;
+        const op=ops[rand(0,ops.length-1)]; let a,b,expr,ans;
+        if(op==='add'){a=rand(min,max); b=rand(min,max); expr=`${a} + ${b} =`; ans=a+b;}
+        else if(op==='sub'){a=rand(min,max); b=rand(min,max); if(a<b)[a,b]=[b,a]; expr=`${a} − ${b} =`; ans=a-b;}
+        else if(op==='mul'){a=rand(min,max); b=rand(min,max); expr=`${a} × ${b} =`; ans=a*b;}
+        else if(op==='div'){
+          b=rand(1,Math.min(max,12)); a=rand(min,max);
+          const quotient=Math.floor(a/b); const remainder=a%b;
+          expr=`${a} ÷ ${b} = (商 ___, 餘數 ___)`;
+          ans={q:quotient,r:remainder};
         }
-        const key = keyFor(op,a,b);
-        if(seen.has(key)) continue; // 去重
-        seen.add(key);
+        const key=keyFor(op,a,b);
+        if(seen.has(key)) continue; seen.add(key);
         qs.push({kind:op,text:expr,answer:ans});
-      }
-      if(qs.length < count){
-        alert('在此範圍內無法產生足夠的不重複題目，請放大範圍或降低題數。');
       }
       return qs;
     }
 
-    // ====== 渲染 & 互動 ======
     let currentQs=[];
 
     function renderQuiz(qs){
       const host=$('#quiz'); host.innerHTML='';
       qs.forEach((q,idx)=>{
         const card=document.createElement('div'); card.className='card';
+        let inputHtml="";
+        if(q.kind==='div'){
+          inputHtml=`<input type="number" placeholder="商" data-sub="q" data-idx="${idx}" />
+                     <input type="number" placeholder="餘數" data-sub="r" data-idx="${idx}" />`;
+        }else{
+          inputHtml=`<input type="number" data-sub="ans" data-idx="${idx}" />`;
+        }
         card.innerHTML=`
           <div class="q-title"><span class="badge">第 ${idx+1} 題</span><span class="badge" data-role="flag"></span></div>
           <div class="expr">${q.text}</div>
-          <div class="ans">
-            <input type="number" inputmode="numeric" aria-label="第 ${idx+1} 題答案" data-idx="${idx}" />
-            <button class="ghost" data-act="check" data-idx="${idx}">檢查</button>
-          </div>
+          <div class="ans">${inputHtml}<button class="ghost" data-act="check" data-idx="${idx}">檢查</button></div>
           <div class="reveal-text" data-role="reveal"></div>`;
         host.appendChild(card);
       });
-      host.onclick=onCardClick; host.onkeydown=onKeyEnterNext;
-      updateProgress();
+      host.onclick=onCardClick;
     }
 
     function onCardClick(e){
@@ -210,29 +189,25 @@
       if(!btn)return; const idx=+btn.dataset.idx; checkOne(idx);
     }
 
-    function onKeyEnterNext(e){
-      if(e.key!=='Enter')return; const inp=e.target.closest('input[type="number"]');
-      if(!inp)return; e.preventDefault();
-      const idx=+inp.dataset.idx; if(inp.value.trim()!=='')checkOne(idx,true);
-      const next=$(`#quiz input[data-idx="${idx+1}"]`); if(next)next.focus(); else $('#btnSubmit').focus();
-      updateProgress();
-    }
-
-    function updateProgress(){
-      const total=currentQs.length; const filled=$$('#quiz input').filter(i=>i.value.trim()!=='').length;
-      $('#progress').textContent=`${filled} / ${total} 完成`;
-    }
-
-    function checkOne(idx,silent=false){
-      const card=$$('#quiz .card')[idx]; const input=card.querySelector('input'); const flag=card.querySelector('[data-role="flag"]');
-      const val=input.value.trim(); if(val===''){if(!silent){flag.textContent='未作答';flag.className='badge';}return;}
-      const ok=Number(val)===Number(currentQs[idx].answer);
+    function checkOne(idx){
+      const card=$$('#quiz .card')[idx]; const flag=card.querySelector('[data-role="flag"]');
+      const q=currentQs[idx]; let ok=false;
+      if(q.kind==='div'){
+        const qVal=card.querySelector('input[data-sub="q"]').value.trim();
+        const rVal=card.querySelector('input[data-sub="r"]').value.trim();
+        if(qVal!=='' && rVal!==''){
+          ok=(Number(qVal)===q.answer.q && Number(rVal)===q.answer.r);
+        }
+      }else{
+        const val=card.querySelector('input[data-sub="ans"]').value.trim();
+        if(val!=='') ok=(Number(val)===Number(q.answer));
+      }
       flag.textContent=ok?'✔ 正確':'✘ 錯誤'; flag.className='badge '+(ok?'flag ok':'flag err');
       return ok;
     }
 
     function submitAll(){
-      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i,true)) score++; });
+      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i)) score++; });
       const total=currentQs.length; const pct=Math.round(score/total*100);
       $('#scoreText').textContent=`成績：${score} / ${total}（${pct}%）`; $('#meter').style.width=pct+'%';
     }
@@ -240,19 +215,15 @@
     function reveal(){
       $$('#quiz .card').forEach((card,i)=>{
         const show=card.querySelector('[data-role="reveal"]');
-        const input=card.querySelector('input');
-        const correct=currentQs[i]?.answer;
-        if(show&&typeof correct!== 'undefined'){
-          show.textContent=`正解：${correct}`;
-          if(input && input.value.trim()===''){
-            input.placeholder=correct;
-          }
+        const q=currentQs[i];
+        if(q.kind==='div'){
+          show.textContent=`正解：商 ${q.answer.q}, 餘數 ${q.answer.r}`;
+        }else{
+          show.textContent=`正解：${q.answer}`;
         }
       });
-      // 不改動分數與進度
     }
 
-    // ====== 事件綁定 ======
     $('#btnStart').onclick=()=>{
       const type=$('#type').value; let min=parseInt($('#min').value||'1',10); let max=parseInt($('#max').value||'100',10);
       min=clamp(min,1,100); max=clamp(max,1,100); if(min>max)[min,max]=[max,min];

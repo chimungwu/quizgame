@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>心算技巧練習（含自動詳解）</title>
+  <style>
+    :root{
+      --bg:#e6f2ff; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#2563eb;
+      --ok:#16a34a; --err:#dc2626; --warn:#f59e0b; --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink)}
+    .wrap{max-width:1000px;margin:auto; padding:20px}
+    header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+    h1{font-size:clamp(28px,4vw,40px);margin:0;line-height:1.2}
+    .sub{color:var(--muted); font-size:14px}
+
+    .panel{margin-top:12px; background:var(--card); border:1px solid #e2e8f0; border-radius:var(--radius); padding:14px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .group{display:flex;align-items:center;gap:6px; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 10px; border-radius:12px}
+    label{color:#334155;font-size:14px}
+    select,input[type=number]{padding:8px 10px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; min-width:80px}
+    button{appearance:none;border:0;border-radius:999px; padding:10px 16px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer}
+    button.ghost{background:transparent;color:#334155;border:1px solid #cbd5e1}
+
+    .grid{display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:12px}
+    @media(min-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(min-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px; box-shadow:0 1px 0 #f3f4f6}
+    .q-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .badge{font-size:12px;color:#64748b;border:1px solid #e2e8f0;border-radius:999px;padding:2px 8px}
+    .expr{font-size:22px; font-weight:800; letter-spacing:.3px}
+    .ans{margin-top:8px; display:flex; gap:8px; align-items:center}
+    .ans input{flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px}
+    .flag{font-size:12px;color:#64748b}
+    .flag.ok{color:var(--ok)}
+    .flag.err{color:var(--err)}
+
+    .explain{margin-top:8px; font-size:14px; line-height:1.5; background:#f8fafc; border:1px dashed #cbd5e1; padding:10px; border-radius:10px}
+    .explain code{background:#e2e8f0; padding:0 4px; border-radius:6px}
+
+    .meter{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden}
+    .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e,#4ade80)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>心算技巧練習（含自動詳解）</h1>
+        <div class="sub">選擇特定心算法出題，作答後會自動顯示「步驟詳解」。適合國小～國中訓練數感與規律。</div>
+        <div class="sub">💻 程式設計：<a href="https://drwu.carrd.co" target="_blank">吳啓銘</a></div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="controls" role="group" aria-label="設定">
+        <div class="group">
+          <label for="trick">技巧</label>
+          <select id="trick">
+            <option value="tail5sq">尾數 5 的平方</option>
+            <option value="sameTenSum10">十位同、個位和 10</option>
+            <option value="times11">兩位數 × 11</option>
+            <option value="near100">接近 100 的乘法</option>
+            <option value="diffSq">差平方 (a+b)(a-b)</option>
+            <option value="nearTensSq">靠近整十的平方</option>
+            <option value="times5">乘以 5</option>
+            <option value="div5">除以 5</option>
+            <option value="percent">百分比速算</option>
+          </select>
+        </div>
+        <div class="group">
+          <label for="count">題數</label>
+          <select id="count">
+            <option>5</option>
+            <option selected>10</option>
+            <option>15</option>
+            <option>20</option>
+          </select>
+        </div>
+        <button id="btnStart">開始出題</button>
+      </div>
+      <div class="sub" style="margin-top:6px">手機作答建議：輸入框支援數字鍵盤（可輸入小數）。按 Enter 會跳到下一題。</div>
+    </section>
+
+    <section class="panel">
+      <div id="quiz" class="grid" aria-live="polite"></div>
+      <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+        <strong id="scoreText">尚未交卷</strong>
+        <span class="badge" id="progress">0 / 0 已作答</span>
+        <div class="meter" style="flex:1; min-width:200px"><i id="meter"></i></div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+        <button id="btnSubmit" class="ghost">交卷批改（並顯示詳解）</button>
+        <button id="btnReveal" class="ghost">顯示答案與詳解</button>
+        <button id="btnRestart" class="ghost">重新出題</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ========= 小工具 =========
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => [...document.querySelectorAll(sel)];
+    const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+    const randInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    const pad2=n=>String(n).padStart(2,'0');
+
+    // ========= 題庫：各技巧的題目生成 & 詳解 =========
+    // 每個生成器回傳：{ text, answer, explainHTML, key }
+
+    function gen_tail5sq(){
+      const n = randInt(1,9); // 十位 n
+      const x = 10*n + 5;
+      const ans = x*x; // 也可用 n(n+1)|25
+      const left = n*(n+1);
+      const key = `tail5sq:${x}`;
+      const explain = `個位為 5 的平方：<br>十位數乘以下一個數 → <code>${n}×${n+1}=${left}</code>，後兩位固定 <code>25</code>。<br>所以 <code>${x}^2 = ${left}</code><code>25</code> → <strong>${ans}</strong>`;
+      return {text:`${x} 的平方 =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_sameTenSum10(){
+      const a = randInt(1,9); // 十位
+      const b = randInt(1,9); // 個位
+      const b2 = 10-b; // 另一個個位
+      const x = 10*a + b;
+      const y = 10*a + b2;
+      const ans = x*y;
+      const left = a*(a+1);
+      const right = b*b2;
+      const rightStr = pad2(right);
+      const key = `sameTenSum10:${x}x${y}`;
+      const explain = `十位相同、個位和為 10：<br>前半 <code>${a}×${a+1}=${left}</code>，後半 <code>${b}×${b2}=${rightStr}</code>（兩位數）。<br>所以 <code>${x}×${y} = ${left}</code><code>${rightStr}</code> → <strong>${ans}</strong>`;
+      return {text:`${x} × ${y} =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_times11(){
+      const a = randInt(1,9), b = randInt(0,9);
+      const x = 10*a + b;
+      const mid = a+b; // 可能 >=10
+      const ans = x*11;
+      // 進位處理說明
+      let explain;
+      if(mid<10){
+        explain = `兩位數 × 11：把位和放中間：<br><code>${a}${b}×11 → ${a}(${a}+${b})${b} = ${a}${mid}${b}</code> → <strong>${ans}</strong>`;
+      }else{
+        const carry = 1, mid2 = mid-10;
+        explain = `兩位數 × 11：先求位和 <code>${a}+${b}=${mid}</code>，中間是兩位要進位：<br>`+
+                  `<code>${a}${b}×11 → ${a}</code><code>${mid}</code><code>${b} → (${a}+1)${mid2}${b} = </code><strong>${ans}</strong>`;
+      }
+      const key = `times11:${x}`;
+      return {text:`${x} × 11 =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_near100(){
+      const a = randInt(1,20), b = randInt(1,20); // 差值
+      const x = 100 - a, y = 100 - b;
+      const ans = x*y;
+      const front = 100 - (a+b);
+      const back = a*b;
+      let explain = `接近 100 乘法：<br>差值 <code>${a}</code> 與 <code>${b}</code>，前半 <code>100-(${a}+${b})=${front}</code>；後半 <code>${a}×${b}=${back}</code>。`;
+      if(back<100){
+        explain += `<br>後半補成兩位：<code>${pad2(back)}</code>。<br>所以 <code>${x}×${y} = ${front}</code><code>${pad2(back)}</code> → <strong>${ans}</strong>`;
+      }else{
+        const carry = Math.floor(back/100), tail = String(back%100).padStart(2,'0');
+        explain += `<br>後半超過兩位 → 進位 <code>+${carry}</code> 到前半，尾碼 <code>${tail}</code>。`+
+                   `<br><code>${front}+${carry}=${front+carry}</code>，答案 <strong>${front+carry}${tail} = ${ans}</strong>`;
+      }
+      const key = `near100:${x}x${y}`;
+      return {text:`${x} × ${y} =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_diffSq(){
+      const a = randInt(20,120);
+      const d = randInt(1,9);
+      const x = a+d, y = a-d; // (a+d)(a-d)
+      const ans = x*y; // = a^2 - d^2
+      const explain = `差平方公式：<code>(a+b)(a-b)=a^2-b^2</code><br>`+
+                      `設 <code>a=${a}, b=${d}</code> → <code>${x}×${y} = ${a}^2 - ${d}^2 = ${a*a} - ${d*d} = </code><strong>${ans}</strong>`;
+      const key = `diffSq:${x}x${y}`;
+      return {text:`${x} × ${y} =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_nearTensSq(){
+      // 隨機挑一個整十 t，距離 d（1~9）
+      const t = randInt(2,19)*10;
+      const d = randInt(1,9);
+      const n = Math.random()<0.5 ? (t-d) : (t+d);
+      const ans = n*n;
+      const explain = `靠近整十平方：<code>n^2 = (t-d)(t+d) + d^2</code><br>`+
+                      `選 <code>t=${t}</code>，差 <code>d=${Math.abs(n-t)}</code> → <code>(${t}-${Math.abs(n-t)})(${t}+${Math.abs(n-t)}) + ${Math.abs(n-t)}^2</code><br>`+
+                      `= <code>${(t-Math.abs(n-t))}×${(t+Math.abs(n-t))} + ${Math.abs(n-t)**2}</code> → <strong>${ans}</strong>`;
+      const key = `nearTensSq:${n}`;
+      return {text:`${n} 的平方 =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_times5(){
+      const n = randInt(12,999);
+      const ans = n*5;
+      const explain = `乘以 5：先 ×10 再 ÷2。<br><code>${n}×5 = (${n}×10)÷2 = ${n}0 ÷ 2 = </code><strong>${ans}</strong>`;
+      const key = `times5:${n}`;
+      return {text:`${n} × 5 =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_div5(){
+      const n = randInt(50,9999);
+      const ans = n/5;
+      const explain = `除以 5：等於 ×2 再 ÷10。<br><code>${n}÷5 = (${n}×2)÷10 = ${n*2} ÷ 10 = </code><strong>${ans}</strong>`;
+      const key = `div5:${n}`;
+      return {text:`${n} ÷ 5 =`, answer:ans, explainHTML:explain, key};
+    }
+
+    function gen_percent(){
+      // 從常見集合挑百分比
+      const PSET = [6, 4.5, 1.1, 12.5, 15, 25, 40, 0.5, 2.5, 7.5];
+      const p = PSET[randInt(0,PSET.length-1)];
+      const base = randInt(80,5000);
+      const ans = +(base * p / 100).toFixed(2);
+      // 詳解：以 1% 為基底拆分
+      const one = base/100;
+      // 拆 p 為整數 + 0.5 + 0.25 等（做個簡單拆法）
+      let parts=[]; let remain=p;
+      const take=(v,label)=>{parts.push({label,value: +(one*v).toFixed(2)}); remain=+(remain - v).toFixed(2)};
+      if(remain>=25 && remain%25===0){ take(25,'25%'); }
+      while(remain>=10){ take(10,'10%'); }
+      if(remain>=5){ take(5,'5%'); }
+      if(remain>=2.5){ take(2.5,'2.5%'); }
+      if(remain>=1){ const k=Math.floor(remain); take(k,`${k}%`); }
+      if(remain>=0.5){ take(0.5,'0.5%'); }
+      if(remain>0){ take(remain,`${remain}%`); }
+      const lines = parts.map(x=>`<li>${x.label}：<code>${x.value}</code></li>`).join('');
+      const sum = parts.reduce((s,x)=>s+x.value,0).toFixed(2);
+      const explain = `百分比速算：先求 1% = <code>${one}</code>，再加總需要的部分：<ul>${lines}</ul>`+
+                      `合計 = <code>${sum}</code> → <strong>${ans}</strong>`;
+      const key = `percent:${p}of${base}`;
+      return {text:`${base} 的 ${p}% =`, answer:ans, explainHTML:explain, key};
+    }
+
+    const generators = {
+      tail5sq: gen_tail5sq,
+      sameTenSum10: gen_sameTenSum10,
+      times11: gen_times11,
+      near100: gen_near100,
+      diffSq: gen_diffSq,
+      nearTensSq: gen_nearTensSq,
+      times5: gen_times5,
+      div5: gen_div5,
+      percent: gen_percent,
+    };
+
+    // ========= 出題與互動 =========
+    let currentQs=[];
+
+    function makeQuiz(kind,count){
+      const seen = new Set();
+      const qs=[]; let tries=0; const LIMIT=count*100;
+      while(qs.length<count && tries<LIMIT){
+        tries++;
+        const q = generators[kind]();
+        if(seen.has(q.key)) continue;
+        seen.add(q.key);
+        qs.push(q);
+      }
+      return qs;
+    }
+
+    function renderQuiz(qs){
+      const host=$('#quiz'); host.innerHTML='';
+      qs.forEach((q,idx)=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML=`
+          <div class="q-title"><span class="badge">第 ${idx+1} 題</span><span class="badge" data-role="flag"></span></div>
+          <div class="expr">${q.text}</div>
+          <div class="ans">
+            <input type="text" inputmode="decimal" placeholder="輸入答案" data-idx="${idx}" />
+            <button class="ghost" data-act="check" data-idx="${idx}">檢查</button>
+          </div>
+          <div class="explain" data-role="explain" hidden></div>`;
+        host.appendChild(card);
+      });
+      host.onclick=onCardClick; host.onkeydown=onKeyEnterNext; updateProgress();
+    }
+
+    function updateProgress(){
+      const total=currentQs.length; const filled=$$('#quiz input').filter(i=>i.value.trim()!=='').length;
+      $('#progress').textContent=`${filled} / ${total} 已作答`;
+    }
+
+    function onCardClick(e){
+      const btn=e.target.closest('button[data-act="check"]');
+      if(!btn) return; const idx=+btn.dataset.idx; checkOne(idx);
+    }
+
+    function onKeyEnterNext(e){
+      if(e.key!=='Enter')return; const inp=e.target.closest('input'); if(!inp) return; e.preventDefault();
+      const idx=+inp.dataset.idx; if(inp.value.trim()!=='') checkOne(idx,true);
+      const next=$(`#quiz input[data-idx="${idx+1}"]`); if(next) next.focus(); else $('#btnSubmit').focus();
+      updateProgress();
+    }
+
+    function showExplain(idx){
+      const card=$$('#quiz .card')[idx]; if(!card) return;
+      const box=card.querySelector('[data-role="explain"]');
+      if(!box) return; box.innerHTML=currentQs[idx].explainHTML; box.hidden=false;
+    }
+
+    function checkOne(idx,silent=false){
+      const card=$$('#quiz .card')[idx]; const flag=card.querySelector('[data-role="flag"]');
+      const val=card.querySelector('input').value.trim();
+      if(val===''){ if(!silent){flag.textContent='未作答'; flag.className='badge';} return false; }
+      const ok = Math.abs(Number(val) - Number(currentQs[idx].answer)) < 1e-9;
+      flag.textContent = ok ? '✔ 正確' : '✘ 錯誤';
+      flag.className='badge '+(ok?'flag ok':'flag err');
+      // 顯示詳解（符合你的需求：給答案時自動出現）
+      showExplain(idx);
+      return ok;
+    }
+
+    function submitAll(){
+      let score=0; currentQs.forEach((_,i)=>{ if(checkOne(i,true)) score++; else showExplain(i); });
+      const total=currentQs.length; const pct=Math.round(score/total*100);
+      $('#scoreText').textContent=`成績：${score} / ${total}（${pct}%）`;
+      $('#meter').style.width=pct+'%';
+      // 顯示全部詳解
+      currentQs.forEach((_,i)=>showExplain(i));
+    }
+
+    function revealAll(){
+      // 把正確答案填在 placeholder，並顯示詳解；不覆蓋作答
+      $$('#quiz .card').forEach((card,i)=>{
+        const inp=card.querySelector('input');
+        if(inp && inp.value.trim()==='') inp.placeholder = currentQs[i].answer;
+        showExplain(i);
+      });
+    }
+
+    // ========= 事件 =========
+    function start(){
+      const kind = $('#trick').value;
+      const count = parseInt($('#count').value,10);
+      currentQs = makeQuiz(kind, count);
+      renderQuiz(currentQs);
+      $('#scoreText').textContent='尚未交卷'; $('#meter').style.width='0%';
+    }
+
+    $('#btnStart').onclick = start;
+    $('#btnRestart').onclick = start;
+    $('#btnSubmit').onclick = submitAll;
+    $('#btnReveal').onclick = revealAll;
+
+    // 預設先出 10 題「尾數 5 的平方」方便預覽
+    start();
+  </script>
+</body>
+</html>

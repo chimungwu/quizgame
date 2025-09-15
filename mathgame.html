@@ -159,10 +159,16 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     line-height: 1.3;
     white-space: normal;
   }
-
+  /* 題目區：字大＆間距舒服 ——— 刪掉整段 */
+  .question{
+    font-size: clamp(28px, 7vw, 32px);
+    padding: 18px 14px;
+    line-height: 1.25;
+  }
+  
   /* 選項：單欄滿版、大按鈕、好點 */
   .options{
-    grid-template-columns: 1fr; /* 2 欄 → 1 欄 */
+    grid-template-columns: repeat(2, 1fr); /* 變回兩欄 */
     gap: 12px;
   }
   button.option{

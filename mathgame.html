@@ -176,7 +176,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   }
 }
 
- @media (max-width: 480px){
+@media (max-width: 480px){
   /* 練習模式：把下一題放在題目下方、滿版好按 */
   body[data-mode="practice"] #nextSlot{ margin-top: 10px; }
   body[data-mode="practice"] #nextSlot #btnNext{
@@ -196,7 +196,6 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   body[data-mode="practice"] .scoreboard{ margin-bottom: 0; }
   body[data-mode="practice"] .wrap{ padding-bottom: 0; }
 }
-
   </style>
 </head>
 <body>
@@ -346,7 +345,27 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     btnNext.addEventListener('click', () => { if(!locked) newQuestion(); });
     btnReset.addEventListener('click', resetAll);
     btnExport.addEventListener('click', exportWrongCSV);
+// 若你沒加 HTML 插槽，可動態建立：
+// document.getElementById('options').insertAdjacentHTML('afterend', '<div id="nextSlot"></div>');
 
+const controlsRow = document.querySelector('.row.controls');
+const btnNext = document.getElementById('btnNext');
+
+function relocateNextBtn(){
+  const slot = document.getElementById('nextSlot');
+  if(!slot) return; // 沒有插槽就略過
+
+  if(mode === 'practice'){
+    if(btnNext.parentElement !== slot){
+      slot.appendChild(btnNext);  // 移到題目下方
+    }
+  }else{
+    if(btnNext.parentElement !== controlsRow){
+      // 移回控制列（擺在 Reset 之前，維持 Start / Next / Reset 的直覺順序）
+      controlsRow.insertBefore(btnNext, document.getElementById('btnReset'));
+    }
+  }
+}
     // 主流程
     function start(){
       score = 0; streak = 0; counter = 0; wrongLog = [];
@@ -364,18 +383,22 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>';
       reviewSec.style.display = 'none';
     }
-function refreshModeFlag(){
-  document.body.setAttribute('data-mode', mode);
+    
+// 你的 updateUI() 結尾加兩行（若已加 data-mode 請保留）
+function refreshModeFlag(){ document.body.setAttribute('data-mode', mode); }
+
+function updateUI(){
+  modeLabel.textContent = (mode==='practice'?'練習':'測驗');
+  typeLabel.textContent = targetType;
+  updateProgress();
+  renderScore();
+  streakEl.textContent = streak;
+  refreshModeFlag();   // 保持 data-mode 正確
+  relocateNextBtn();   // ← 依模式搬動按鈕
 }
-    // UI 更新
-    function updateUI(){
-      modeLabel.textContent = (mode==='practice'?'練習':'測驗');
-      typeLabel.textContent = targetType;
-      updateProgress();
-      renderScore();
-      streakEl.textContent = streak;
-      refreshModeFlag();           // ← 加這行
-    }
+
+// 初始化時也跑一次（避免初載入未搬動）
+relocateNextBtn();
     function updateProgress(){
       if(mode==='exam'){
         progressEl.textContent = `${counter}/${examTotal}`;

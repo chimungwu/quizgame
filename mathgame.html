@@ -175,7 +175,16 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     backdrop-filter: blur(6px);
   }
 }
-
+@media (max-width: 480px){
+  .row.controls{
+    position: sticky; bottom: 0; z-index: 10;
+    background: rgba(11,18,32,.85);
+    backdrop-filter: blur(8px);
+    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid #1f2937;
+  }
+}
   </style>
 </head>
 <body>
@@ -716,7 +725,7 @@ function decideTip(a, b) {
           }
         }, 600);
       }else{
-        setTimeout(()=>{ locked=false; }, 200);
+        setTimeout(()=>{ locked=false; }, 350);
       }
     }
 

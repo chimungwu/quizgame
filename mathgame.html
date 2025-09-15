@@ -1,1 +1,786 @@
-<!DOCTYPE html> <html lang="zh-Hant"> <head> <!-- 書籤/分頁 icon --> <link rel="icon" type="image/png" href="favicon1.png" /> <!-- iPhone/iPad 主畫面 icon --> <link rel="apple-touch-icon" href="favicon1.png" /> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width,initial-scale=1" /> <title>兩位數乘法速算｜練習 & 測驗</title> <style> :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --good:#22c55e; --bad:#ef4444; } *{box-sizing:border-box} body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,#0b1220,#0b1325 40%,#0b152a); color:var(--txt); display:flex; min-height:100vh; align-items:center; justify-content:center; padding:20px; } .wrap{width:min(1000px,100%); display:grid; gap:16px} .card{ background:rgba(17,24,39,.85); border:1px solid #1f2937; border-radius:20px; padding:20px; backdrop-filter:blur(6px); box-shadow:0 10px 30px rgba(0,0,0,.35); } h1{margin:0 0 6px; font-size:clamp(28px,4vw,40px)} .sub{opacity:.95; font-size:14px; margin-bottom:12px; line-height:1.6} .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center} .pill{padding:8px 12px; border-radius:999px; background:#0b1220; border:1px solid #1f2937; font-size:14px} .pill b{color:var(--accent)} .question{ font-size:clamp(28px,6vw,44px); text-align:center; padding:16px; border-radius:16px; background:#0b1220; border:1px solid #1f2937; letter-spacing:1px } .options{display:grid; grid-template-columns:repeat(2,1fr); gap:10px} button.option{ padding:14px 10px; font-size:clamp(18px,3.5vw,22px); border-radius:14px; border:1px solid #374151; background:#0d1726; color:var(--txt); cursor:pointer; transition:.15s transform,.15s background,.15s border; } button.option:hover{transform:translateY(-1px); background:#0f1c30} button.option.correct{border-color:rgba(34,197,94,.7); background:rgba(34,197,94,.1)} button.option.wrong{border-color:rgba(239,68,68,.7); background:rgba(239,68,68,.08)} .controls{display:flex; gap:10px; flex-wrap:wrap; justify-content:center} .btn{ padding:10px 14px; border-radius:12px; border:1px solid #374151; background:#0d1726; color:var(--txt); cursor:pointer; font-size:16px } .btn.primary{border-color:var(--accent); background:rgba(56,189,248,.1)} .btn.danger{border-color:#ef4444; background:rgba(239,68,68,.1)} .btn.success{border-color:#22c55e; background:rgba(34,197,94,.1)} .tip{ font-size:14px; border-left:3px solid var(--accent); padding:10px 12px; background:#0b1220; border-radius:8px; opacity:.95 } .scoreboard{display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap} .muted{opacity:.7} footer{opacity:.7; font-size:12px; text-align:center} .grid{display:grid; gap:10px} .grid.cols-3{grid-template-columns:repeat(3,1fr)} label{font-size:14px; opacity:.95} select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid #374151; background:#0b1220; color:var(--txt) } /* 回顧區塊 */ #review{display:none} .review-title{font-size:20px; margin:0 0 8px} .review-actions{display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 12px} .review-list{display:grid; gap:10px; max-height:360px; overflow:auto; padding-right:6px} .review-item{ border:1px solid #374151; border-radius:12px; padding:12px; background:#0b1220; } .review-item .q{font-size:18px; margin-bottom:6px} .review-item .you{color:var(--bad)} .review-item .ans{color:var(--good)} .review-item .how{font-size:14px; opacity:.9} .empty{opacity:.8; padding:8px 0} a{color:#38bdf8; text-decoration:none} </style> </head> <body> <main class="wrap"> <!-- 1. 控制列 --> <section class="card"> <h1 style="color:#e5e7eb;">🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1> <div class="sub" style="color:#e5e7eb;"> <b>練習模式：</b>不計分，只練習題型與解法提示。<br> <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；結束後提供錯題回顧與 CSV 匯出。<br> 💻 程式設計：<a href="https://drwu.carrd.co" target="_blank">仨寶爸中醫博士吳啓銘</a> </div> <div class="grid cols-3"> <div> <label>模式</label> <select id="modeSelect"> <option value="practice">練習模式（不計分）</option> <option value="exam">測驗模式（滿分 100）</option> </select> </div> <div> <label>題型（練習可指定，測驗可選混合或指定）</label> <select id="typeSelect"> <option value="混合">混合</option> <option value="拆分">拆分</option> <option value="平方差">平方差</option> <option value="接近100">接近100</option> <option value="尾數互補">尾數互補</option> <option value="尾數5平方">尾數5平方</option> <option value="倍數/一半">倍數/一半</option> <option value="平方">平方</option> </select> </div> <div> <label>測驗題數（僅測驗模式）</label> <select id="examCount"> <option value="5">5 題（每題 20 分）</option> <option value="10" selected>10 題（每題 10 分）</option> <option value="20">20 題（每題 5 分）</option> <option value="50">50 題（每題 2 分）</option> </select> </div> </div> <div class="scoreboard" style="margin-top:12px"> <div class="row"> <div class="pill">目前模式：<b id="modeLabel">練習</b></div> <div class="pill">題型：<b id="typeLabel">混合</b></div> <div class="pill">目前分數：<b id="score">—</b></div> <div class="pill">進度：<b id="progress">—</b></div> <div class="pill">每題配分（測驗）：<b id="perQ">—</b></div> <div class="pill">連續答對：<b id="streak">0</b></div> </div> <div class="row controls"> <button class="btn primary" id="btnStart">開始</button> <button class="btn" id="btnNext">下一題</button> <button class="btn danger" id="btnReset">重置</button> </div> </div> </section> <!-- 2. 出題 --> <section class="card" id="play"> <div id="question" class="question">請選擇模式與題型後按「開始」。</div> <div id="options" class="options"></div> </section> <!-- 3. 提示 --> <section class="card"> <div class="tip" id="tip"> 提示會顯示在這裡（答錯或按下一題後出現）。<br> <span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span> </div> </section> <!-- 4. 錯題回顧（測驗結束才顯示） --> <section class="card" id="review"> <div class="review-head"> <h3 class="review-title">📝 錯題回顧（含解法與正確答案）</h3> <div class="review-actions"> <button class="btn success" id="btnExport">匯出錯題 CSV</button> </div> </div> <div id="reviewList" class="review-list"></div> <div class="empty" id="reviewEmpty">太強了！這次測驗沒有錯題。</div> </section> <footer> 練習模式：<b>不計分</b> ｜ 測驗模式：<b>滿分 100</b>（5/10/20/50 題對應每題 20/10/5/2 分；答對才加分）。 </footer> </main> <script> // 狀態 let mode = 'practice'; // 'practice' | 'exam' let targetType = '混合'; let examTotal = 10; // 預設 10 題 let counter = 0; // 已作答題數（測驗） let score = 0; // 測驗分數；練習模式顯示為「—」 let streak = 0; let current = null; // {a,b,ans,tip,type} let locked = false; // 防重複點擊 let wrongLog = []; // 測驗錯題回顧 [{q, type, your, ans, tip}] // DOM const modeSelect = document.getElementById('modeSelect'); const typeSelect = document.getElementById('typeSelect'); const examCount = document.getElementById('examCount'); const modeLabel = document.getElementById('modeLabel'); const typeLabel = document.getElementById('typeLabel'); const scoreEl = document.getElementById('score'); const progressEl = document.getElementById('progress'); const perQEl = document.getElementById('perQ'); const streakEl = document.getElementById('streak'); const qEl = document.getElementById('question'); const optsEl = document.getElementById('options'); const tipEl = document.getElementById('tip'); const reviewSec = document.getElementById('review'); const reviewList = document.getElementById('reviewList'); const reviewEmpty = document.getElementById('reviewEmpty'); const btnStart = document.getElementById('btnStart'); const btnNext = document.getElementById('btnNext'); const btnReset = document.getElementById('btnReset'); const btnExport = document.getElementById('btnExport'); // 事件 modeSelect.addEventListener('change', () => { mode = modeSelect.value; modeLabel.textContent = (mode==='practice'?'練習':'測驗'); updatePerQ(); updateProgress(); renderScore(); }); typeSelect.addEventListener('change', () => { targetType = typeSelect.value; typeLabel.textContent = targetType; }); examCount.addEventListener('change', () => { examTotal = Number(examCount.value); updatePerQ(); updateProgress(); }); btnStart.addEventListener('click', start); btnNext.addEventListener('click', () => { if(!locked) newQuestion(); }); btnReset.addEventListener('click', resetAll); btnExport.addEventListener('click', exportWrongCSV); // 主流程 function start(){ score = 0; streak = 0; counter = 0; wrongLog = []; reviewSec.style.display = 'none'; updatePerQ(); updateUI(); newQuestion(); } function resetAll(){ score=0; streak=0; counter=0; wrongLog=[]; updateUI(); qEl.textContent = '請選擇模式與題型後按「開始」。'; optsEl.innerHTML = ''; tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>'; reviewSec.style.display = 'none'; } // UI 更新 function updateUI(){ modeLabel.textContent = (mode==='practice'?'練習':'測驗'); typeLabel.textContent = targetType; updateProgress(); renderScore(); streakEl.textContent = streak; } function updateProgress(){ if(mode==='exam'){ progressEl.textContent = ${counter}/${examTotal}; }else{ progressEl.textContent = '—'; } } function updatePerQ(){ if(mode==='exam'){ const perQ = perScoreFor(examTotal); perQEl.textContent = ${perQ} 分／題（滿分 100）; }else{ perQEl.textContent = '—'; } } function renderScore(){ scoreEl.textContent = (mode==='exam') ? Math.round(score) : '—'; } // 每題配分（固定 5/10/20/50 題） function perScoreFor(n){ if(n===5) return 20; if(n===10) return 10; if(n===20) return 5; if(n===50) return 2; return +(100/n).toFixed(2); } // 出題流程 function newQuestion(){ locked = false; const type = (mode==='practice' && targetType!=='混合') ? targetType : (targetType==='混合' ? weightedPick() : targetType); current = generateByType(type); qEl.textContent = ${current.a} × ${current.b} = ?　（${current.type}）; tipEl.textContent = '提示：先自己試試看，答錯會顯示解法。'; renderOptions(); updateProgress(); } // 混合時的題型權重（避免幾乎都拆分） function weightedPick(){ const bag = [ '平方差','平方差','平方差', '接近100','接近100', '尾數互補','尾數互補', '尾數5平方', '倍數/一半', '平方', '拆分','拆分' ]; return bag[Math.floor(Math.random()*bag.length)]; } // 題目生成（依題型） function generateByType(type){ let a,b,tries=0; while(tries<500){ tries++; a = randInt(10,99); b = randInt(10,99); if(type==='尾數5平方'){ a = randPick([15,25,35,45,55,65,75,85,95]); b = a; } else if(type==='平方'){ a = randInt(10,99); b = a; } else if(type==='接近100'){ a = randInt(90,99); b = randInt(90,99); } else if(type==='尾數互補'){ const t = randInt(1,9); const u = randPick([1,2,3,4,5,6,7,8,9]); const v = 10-u; a = t*10 + u; b = t*10 + v; } else if(type==='平方差'){ const m = randPick([20,30,40,50,60,70,80,90]); const n = randPick([1,2,3,4]); a = m-n; b = m+n; } else if(type==='倍數/一半'){ if(Math.random()<0.4){ a = randPick([25,50]); b = randInt(10,99); } else{ a = randPick([12,14,15,16,18,20,24,28,30,32,36,40,42,44,48]); b = randPick([12,14,15,16,18,20,24,28,30,32,36,40,42,44,48]); } } // 拆分 or 其他：任意兩位數 if( validateType(type,a,b) ){ const ans = a*b; const {tip,type:finalType} = decideTip(a,b); return {a,b,ans,tip,type:finalType}; } } const ans = a*b; const {tip,type:finalType} = decideTip(a,b); return {a,b,ans,tip,type:finalType}; } function validateType(type,a,b){ if(type==='尾數5平方') return (a===b && a%10===5); if(type==='平方') return (a===b); if(type==='接近100') return (a>=90 && b>=90); if(type==='尾數互補') return (Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10)); if(type==='平方差') { const d = Math.abs(a-b); return ((a+b)%2===0) && (d%2===0) && d>=2 && d<=8; } if(type==='倍數/一半') return ( (a%2===0 && b%2===0) || (a%25===0 || b%25===0 || a%50===0 || b%50===0) || gcd(a,b)>1 ); return true; } // 工具 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; } function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; } function gcd(x,y){ while(y){ [x,y]=[y,x%y]; } return x; } // 對半×加倍步驟：以狀態陣列記錄，避免重複節點 function halfDoubleSteps(a, b) { let x = a, y = b; // 狀態紀錄陣列，先放入原始乘法 const states = [${x}×${y}]; let moves = 0; // 條件：兩數皆為偶數，x > 1，限制最多 4 步，避免展開過長 while (x % 2 === 0 && y % 2 === 0 && x > 1 && moves < 4) { x = x / 2; y = y * 2; moves++; states.push(${x}×${y}); // 🚩 如果其中一個數字變成整十或整百，就提早結束 if (x % 10 === 0 || y % 10 === 0 || x % 100 === 0 || y % 100 === 0) { break; } } // 回傳整個過程文字，以及最後的 x, y 值 return { text: states.join(' → '), lastX: x, lastY: y }; } /** * 依題目 a×b 的特徵，自動選擇「最順手」的心算技巧，並回傳說明文字 tip 與題型 type。 * 規則順序（由強到弱）： * 1) 特殊平方：尾數5平方、一般平方 * 2) 尾數互補（同十位、個位和為10） * 3) 接近100（兩數皆≥90） * 4) 平方差（形如 m−n 與 m+n） * 5) 倍數/一半（先檢查 20/25/50 的整百法 → 再對半×加倍 → 再提公因數） * 6) 最後退回「拆分法」展開 */ function decideTip(a, b) { const ans = a * b; // 正確答案（用來結尾顯示） const same = (a === b); // 是否平方情況 const tensA = Math.floor(a / 10), tensB = Math.floor(b / 10); const onesA = a % 10, onesB = b % 10; // ——————————— 1) 特殊平方：尾數5平方 ——————————— if (same && a % 10 === 5) { const head = Math.floor(a / 10); // 前面那個十位數 const front = head * (head + 1); // 前半部：t × (t+1) return { tip: [尾數 5] 前：${head}×(${head}+1)=${front}；後：25 → ${front}25 = ${ans}, type: '尾數5平方' }; } // ——————————— 2) 一般平方（用 (整十±d)^2 展開） ——————————— if (same) { const t = Math.round(a / 10) * 10; // 就近的整十數，例如 34 → 30； 67 → 70 const d = Math.abs(a - t); // 與整十差距 const p1 = t * t, p2 = 2 * t * d, p3 = d * d; if (a >= t) { return { tip: [平方] (${t}+${d})² = ${t}² + 2×${t}×${d} + ${d}² = ${p1} + ${p2} + ${p3} = ${ans}, type: '平方' }; } else { return { tip: [平方] (${t}−${d})² = ${t}² − 2×${t}×${d} + ${d}² = ${p1} − ${p2} + ${p3} = ${ans}, type: '平方' }; } } // ——————————— 3) 尾數互補（同十位、個位和為10） ——————————— if (tensA === tensB && (onesA + onesB === 10)) { const t = tensA; const front = t * (t + 1); // 前半：十位 t × (t+1) const back = onesA * onesB; // 後半：個位相乘 const back2 = back.toString().padStart(2, '0'); // 後半補成「兩位數」 return { tip: [尾數互補] 前：${t}×(${t}+1)=${front}；後：${onesA}×${onesB}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}, type: '尾數互補' }; } // ——————————— 4) 接近100（Nikhilam：兩數都接近100） ——————————— if (a >= 90 && b >= 90) { const da = 100 - a, db = 100 - b; // 與100的差 const front = 100 - (da + db); // 前半：100 − (差和) const back = da * db; // 後半：差的乘積 const back2 = back.toString().padStart(2, '0'); return { tip: [接近100] 前：100−(${da}+${db})=${front}；後：${da}×${db}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}, type: '接近100' }; } // ——————————— 5) 平方差（(m−n)(m+n)=m²−n²） ——————————— // 允許 n = |a-b|/2 ∈ {1,2,3,4}（你的出題邏輯），只要 a+b 為偶數、|a-b| 為偶數即可 { const d = Math.abs(a - b); // 🚩 排除 20、25、50（這些要走整百法，不走平方差） if (a === 20 || b === 20 || a === 25 || b === 25 || a === 50 || b === 50) { // 直接跳過，不進入平方差 } else if (((a + b) % 2 === 0) && (d % 2 === 0) && d >= 2 && d <= 8) { const m = (a + b) / 2; const n = d / 2; const m2 = m * m; const n2 = n * n; return { tip: [平方差] (${m}−${n})(${m}+${n}) = ${m}² − ${n}² = ${m2} − ${n2} = ${ans}, type: '平方差' }; } } // ——————————— 6) 倍數/一半（依序：整百法 → 對半×加倍 → 提公因數） ——————————— const g = gcd(a, b); // 先求公因數，可能在後面用到 // 6-1) 特殊整百法：20 / 25 / 50（另一數需可整除分母，才能湊 100） if (a === 20 && b % 5 === 0) { return { tip: [倍數/一半] 20=100÷5 → ${a}×${b} = 100×${b / 5} = ${ans}, type: '倍數/一半' }; } if (b === 20 && a % 5 === 0) { return { tip: [倍數/一半] 20=100÷5 → ${a}×${b} = 100×${a / 5} = ${ans}, type: '倍數/一半' }; } if (a === 25 && b % 4 === 0) { return { tip: [倍數/一半] 25=100÷4 → ${a}×${b} = 100×${b / 4} = ${ans}, type: '倍數/一半' }; } if (b === 25 && a % 4 === 0) { return { tip: [倍數/一半] 25=100÷4 → ${a}×${b} = 100×${a / 4} = ${ans}, type: '倍數/一半' }; } if (a === 50 && b % 2 === 0) { return { tip: [倍數/一半] 50=100÷2 → ${a}×${b} = 100×${b / 2} = ${ans}, type: '倍數/一半' }; } if (b === 50 && a % 2 === 0) { return { tip: [倍數/一半] 50=100÷2 → ${a}×${b} = 100×${a / 2} = ${ans}, type: '倍數/一半' }; } // 6-2) 一般化的整百法（a 或 b 是 25/50 的倍數，且另一邊可被 4/2 整除） if (a % 50 === 0 && b % 2 === 0) { const k = a / 50; return { tip: [倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${b}/2) = 100×${k * b / 2} = ${ans}, type: '倍數/一半' }; } if (b % 50 === 0 && a % 2 === 0) { const k = b / 50; return { tip: [倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${a}/2) = 100×${k * a / 2} = ${ans}, type: '倍數/一半' }; } if (a % 25 === 0 && b % 4 === 0) { const k = a / 25; return { tip: [倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${b}/4) = 100×${k * b / 4} = ${ans}, type: '倍數/一半' }; } if (b % 25 === 0 && a % 4 === 0) { const k = b / 25; return { tip: [倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${a}/4) = 100×${k * a / 4} = ${ans}, type: '倍數/一半' }; } // 6-3) 兩數皆偶數 → 對半×加倍（遇到整十/整百就停，方便心算收尾） if (a % 2 === 0 && b % 2 === 0) { const { text } = halfDoubleSteps(a, b); return { tip: [倍數/一半] 對半×加倍：${text} = ${ans}, type: '倍數/一半' }; } // 6-4) 其餘：若有公因數，先提公因數；否則交給拆分法 if (g > 1) { const m = a / g, n = b / g; return { tip: [倍數/一半] 先提公因數：${a}×${b} = (${g}×${m})×(${g}×${n}) = ${g}²×(${m}×${n}) = ${g * g}×${m * n} = ${ans}, type: '倍數/一半' }; } // ——————————— 7) 拆分法 fallback： (A0+aU)(B0+bU) 展開四項 ——————————— const aT = tensA, aU = onesA, bT = tensB, bU = onesB; const p1 = (aT * 10) * (bT * 10); const p2 = (aT * 10) * bU; const p3 = aU * (bT * 10); const p4 = aU * bU; return { tip: [拆分] (${aT}0+${aU})×(${bT}0+${bU}) = ${p1} + ${p2} + ${p3} + ${p4} = ${ans}, type: '拆分' }; } // 建立選項（含正解 + 干擾） function buildOptions(ans){ const s = new Set([ans]); while(s.size<2){ s.add(ans + randInt(-25,25)); } const rounded = Math.round(ans/10)*10; if(rounded>0) s.add(rounded); if(ans>99) s.add(ans - (ans%10||10)); s.add(ans + (10*(randInt(-2,2)))); let arr = Array.from(s).filter(x=>x>0); while(arr.length<4){ const w = ans + randInt(-40,40); if(w>0 && !arr.includes(w)) arr.push(w); } arr = arr.slice(0,4); return arr.sort(()=>Math.random()-0.5); } // 出題與作答 function renderOptions(){ const ops = buildOptions(current.ans); optsEl.innerHTML = ''; ops.forEach(val=>{ const btn = document.createElement('button'); btn.className = 'option'; btn.textContent = val; btn.addEventListener('click', ()=> choose(val, btn)); optsEl.appendChild(btn); }); } function choose(val, btn){ if(locked) return; locked = true; const all = Array.from(document.querySelectorAll('button.option')); const correctBtn = all.find(b => Number(b.textContent) === current.ans); if(val === current.ans){ btn.classList.add('correct'); if(mode==='exam'){ const perQ = perScoreFor(examTotal); score += perQ; // 答對才加分 } streak += 1; tipEl.innerHTML = ✅ 答對！${mode==='exam'?本題 +${perScoreFor(examTotal)} 分　:''}<span class="muted">🔥 連對 ${streak} 題！</span>; }else{ btn.classList.add('wrong'); if(correctBtn) correctBtn.classList.add('correct'); streak = 0; tipEl.innerHTML = ❌ 答錯！<br>解法：${current.tip}; if(mode==='exam'){ wrongLog.push({ q:${current.a} × ${current.b}, type: current.type, your: val, ans: current.ans, tip: current.tip }); } } renderScore(); if(mode==='exam'){ counter += 1; updateProgress(); setTimeout(()=>{ if(counter >= examTotal){ endExam(); }else{ newQuestion(); } }, 600); }else{ setTimeout(()=>{ locked=false; }, 200); } } function endExam(){ locked = true; document.querySelectorAll('button.option').forEach(b=>b.disabled=true); const finalScore = Math.round(score); // 百分制整數 qEl.textContent = 測驗結束！你的分數：${finalScore} / 100（共 ${examTotal} 題）; tipEl.innerHTML = 下方列出本次測驗的錯題與解法，可按「匯出錯題 CSV」。; showReview(); } // 回顧 function showReview(){ reviewSec.style.display = 'block'; reviewList.innerHTML = ''; if(wrongLog.length === 0){ reviewEmpty.style.display = 'block'; return; } reviewEmpty.style.display = 'none'; wrongLog.forEach((it, idx)=>{ const div = document.createElement('div'); div.className = 'review-item'; div.innerHTML = <div class="q">#${idx+1}　${it.q}　<span class="muted">（${it.type}）</span></div> <div>你的答案：<span class="you">${it.your}</span>　｜　正確：<span class="ans">${it.ans}</span></div> <div class="how">解法：${it.tip}</div> ; reviewList.appendChild(div); }); reviewSec.scrollIntoView({behavior:'smooth', block:'start'}); } // 匯出錯題 CSV function exportWrongCSV(){ if(!wrongLog.length){ alert('這次測驗沒有錯題可匯出。'); return; } const header = ['題目','題型','你的答案','正確答案','解法']; const rows = wrongLog.map(r => [r.q, r.type, String(r.your), String(r.ans), r.tip]); const csv = [header, ...rows].map(row => row.map(csvEscape).join(',')).join('\r\n'); const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'wrong_questions.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); } function csvEscape(val){ const s = (val ?? '').toString().replace(/\r?\n/g,' '); return /[",]/.test(s) ? "${s.replace(/"/g,'""')}" : s; } </script> </body> </html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <!-- 書籤/分頁 icon -->
+  <link rel="icon" type="image/png" href="favicon1.png" />
+  <!-- iPhone/iPad 主畫面 icon -->
+  <link rel="apple-touch-icon" href="favicon1.png" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>兩位數乘法速算｜練習 & 測驗</title>
+
+  <style>
+    /* ========== 全域變數與基礎樣式 ========== */
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --txt: #e5e7eb;
+      --accent: #38bdf8;
+      --good: #22c55e;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(180deg, #0b1220, #0b1325 40%, #0b152a);
+      color: var(--txt);
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .wrap { width: min(1000px, 100%); display: grid; gap: 16px; }
+    .card {
+      background: rgba(17, 24, 39, .85);
+      border: 1px solid #1f2937;
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+    h1 { margin: 0 0 6px; font-size: clamp(28px, 4vw, 40px); }
+    .sub { opacity: .95; font-size: 14px; margin-bottom: 12px; line-height: 1.6; }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .pill {
+      padding: 8px 12px; border-radius: 999px;
+      background: #0b1220; border: 1px solid #1f2937; font-size: 14px;
+    }
+    .pill b { color: var(--accent); }
+
+    .question {
+      font-size: clamp(28px, 6vw, 44px);
+      text-align: center; padding: 16px; border-radius: 16px;
+      background: #0b1220; border: 1px solid #1f2937; letter-spacing: 1px;
+    }
+
+    .options {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      /* 預留下方間距，避免覆蓋控制列（行動裝置） */
+      margin-bottom: 6px;
+    }
+    button.option {
+      padding: 14px 10px; font-size: clamp(18px, 3.5vw, 22px);
+      border-radius: 14px; border: 1px solid #374151;
+      background: #0d1726; color: var(--txt); cursor: pointer;
+      transition: .15s transform, .15s background, .15s border;
+    }
+    button.option:hover { transform: translateY(-1px); background: #0f1c30; }
+    button.option.correct { border-color: rgba(34,197,94,.7); background: rgba(34,197,94,.1); }
+    button.option.wrong { border-color: rgba(239,68,68,.7); background: rgba(239,68,68,.08); }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      padding: 10px 14px; border-radius: 12px; border: 1px solid #374151;
+      background: #0d1726; color: var(--txt); cursor: pointer; font-size: 16px;
+    }
+    .btn.primary { border-color: var(--accent); background: rgba(56,189,248,.1); }
+    .btn.danger { border-color: #ef4444; background: rgba(239,68,68,.1); }
+    .btn.success { border-color: #22c55e; background: rgba(34,197,94,.1); }
+
+    .tip {
+      font-size: 14px; border-left: 3px solid var(--accent);
+      padding: 10px 12px; background: #0b1220; border-radius: 8px; opacity: .95;
+    }
+
+    .scoreboard { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+    .muted { opacity: .7; }
+    footer { opacity: .7; font-size: 12px; text-align: center; }
+
+    .grid { display: grid; gap: 10px; }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+    label { font-size: 14px; opacity: .95; }
+    select {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid #374151; background: #0b1220; color: var(--txt);
+    }
+
+    /* ========== 回顧區塊 ========== */
+    #review { display: none; }
+    .review-title { font-size: 20px; margin: 0 0 8px; }
+    .review-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 12px; }
+    .review-list { display: grid; gap: 10px; max-height: 360px; overflow: auto; padding-right: 6px; }
+    .review-item { border: 1px solid #374151; border-radius: 12px; padding: 12px; background: #0b1220; }
+    .review-item .q { font-size: 18px; margin-bottom: 6px; }
+    .review-item .you { color: var(--bad); }
+    .review-item .ans { color: var(--good); }
+    .review-item .how { font-size: 14px; opacity: .9; }
+    .empty { opacity: .8; padding: 8px 0; }
+
+    a { color: #38bdf8; text-decoration: none; }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+    <!-- ========== 1) 控制列 ========== -->
+    <section class="card">
+      <h1 style="color:#e5e7eb;">🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1>
+      <div class="sub" style="color:#e5e7eb;">
+        <b>練習模式：</b>不計分，只練習題型與解法提示。<br />
+        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；結束後提供錯題回顧與 CSV 匯出。<br />
+        💻 程式設計：<a href="https://drwu.carrd.co" target="_blank">仨寶爸中醫博士吳啓銘</a>
+      </div>
+
+      <div class="grid cols-3">
+        <div>
+          <label for="modeSelect">模式</label>
+          <select id="modeSelect">
+            <option value="practice">練習模式（不計分）</option>
+            <option value="exam">測驗模式（滿分 100）</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="typeSelect">題型（練習可指定，測驗可選混合或指定）</label>
+          <select id="typeSelect">
+            <option value="混合">混合</option>
+            <option value="拆分">拆分</option>
+            <option value="平方差">平方差</option>
+            <option value="接近100">接近100</option>
+            <option value="尾數互補">尾數互補</option>
+            <option value="尾數5平方">尾數5平方</option>
+            <option value="倍數/一半">倍數/一半</option>
+            <option value="平方">平方</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="examCount">測驗題數（僅測驗模式）</label>
+          <select id="examCount">
+            <option value="5">5 題（每題 20 分）</option>
+            <option value="10" selected>10 題（每題 10 分）</option>
+            <option value="20">20 題（每題 5 分）</option>
+            <option value="50">50 題（每題 2 分）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="scoreboard" style="margin-top:12px">
+        <div class="row">
+          <div class="pill">目前模式：<b id="modeLabel">練習</b></div>
+          <div class="pill">題型：<b id="typeLabel">混合</b></div>
+          <div class="pill">目前分數：<b id="score">—</b></div>
+          <div class="pill">進度：<b id="progress">—</b></div>
+          <div class="pill">每題配分（測驗）：<b id="perQ">—</b></div>
+          <div class="pill">連續答對：<b id="streak">0</b></div>
+        </div>
+
+        <div class="row controls">
+          <button class="btn primary" id="btnStart">開始</button>
+          <button class="btn" id="btnNext">下一題</button>
+          <button class="btn danger" id="btnReset">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 2) 出題區 ========== -->
+    <section class="card" id="play">
+      <div id="question" class="question">請選擇模式與題型後按「開始」。</div>
+      <div id="options" class="options"></div>
+    </section>
+
+    <!-- ========== 3) 提示區 ========== -->
+    <section class="card">
+      <div class="tip" id="tip">
+        提示會顯示在這裡（答錯或按下一題後出現）。<br />
+        <span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>
+      </div>
+    </section>
+
+    <!-- ========== 4) 錯題回顧（測驗結束才顯示） ========== -->
+    <section class="card" id="review">
+      <div class="review-head">
+        <h3 class="review-title">📝 錯題回顧（含解法與正確答案）</h3>
+        <div class="review-actions">
+          <button class="btn success" id="btnExport">匯出錯題 CSV</button>
+        </div>
+      </div>
+      <div id="reviewList" class="review-list"></div>
+      <div class="empty" id="reviewEmpty">太強了！這次測驗沒有錯題。</div>
+    </section>
+
+    <footer>
+      練習模式：<b>不計分</b>
+      ｜ 測驗模式：<b>滿分 100</b>（5/10/20/50 題對應每題 20/10/5/2 分；答對才加分）。
+    </footer>
+  </main>
+
+  <script>
+    /* =========================================
+       狀態與 DOM
+       ========================================= */
+    let mode = 'practice';         // 'practice' | 'exam'
+    let targetType = '混合';
+    let examTotal = 10;            // 預設 10 題
+    let counter = 0;               // 已作答題數（測驗）
+    let score = 0;                 // 測驗分數；練習模式顯示為「—」
+    let streak = 0;                // 連續答對數
+    let current = null;            // 當前題目 {a,b,ans,tip,type}
+    let locked = false;            // 防重複點擊
+    let wrongLog = [];             // 測驗錯題回顧 [{q,type,your,ans,tip}]
+
+    // DOM 快取
+    const modeSelect  = document.getElementById('modeSelect');
+    const typeSelect  = document.getElementById('typeSelect');
+    const examCount   = document.getElementById('examCount');
+    const modeLabel   = document.getElementById('modeLabel');
+    const typeLabel   = document.getElementById('typeLabel');
+    const scoreEl     = document.getElementById('score');
+    const progressEl  = document.getElementById('progress');
+    const perQEl      = document.getElementById('perQ');
+    const streakEl    = document.getElementById('streak');
+    const qEl         = document.getElementById('question');
+    const optsEl      = document.getElementById('options');
+    const tipEl       = document.getElementById('tip');
+    const reviewSec   = document.getElementById('review');
+    const reviewList  = document.getElementById('reviewList');
+    const reviewEmpty = document.getElementById('reviewEmpty');
+    const btnStart    = document.getElementById('btnStart');
+    const btnNext     = document.getElementById('btnNext');
+    const btnReset    = document.getElementById('btnReset');
+    const btnExport   = document.getElementById('btnExport');
+
+    /* =========================================
+       事件註冊
+       ========================================= */
+    modeSelect.addEventListener('change', () => {
+      mode = modeSelect.value;
+      modeLabel.textContent = (mode === 'practice' ? '練習' : '測驗');
+      updatePerQ();
+      updateProgress();
+      renderScore();
+    });
+
+    typeSelect.addEventListener('change', () => {
+      targetType = typeSelect.value;
+      typeLabel.textContent = targetType;
+    });
+
+    examCount.addEventListener('change', () => {
+      examTotal = Number(examCount.value);
+      updatePerQ();
+      updateProgress();
+    });
+
+    btnStart.addEventListener('click', start);
+    btnNext.addEventListener('click', () => { if (!locked) newQuestion(); });
+    btnReset.addEventListener('click', resetAll);
+    btnExport.addEventListener('click', exportWrongCSV);
+
+    /* =========================================
+       主流程控制
+       ========================================= */
+    function start() {
+      score = 0;
+      streak = 0;
+      counter = 0;
+      wrongLog = [];
+      reviewSec.style.display = 'none';
+      updatePerQ();
+      updateUI();
+      newQuestion();
+    }
+
+    function resetAll() {
+      score = 0;
+      streak = 0;
+      counter = 0;
+      wrongLog = [];
+      updateUI();
+      qEl.textContent = '請選擇模式與題型後按「開始」。';
+      optsEl.innerHTML = '';
+      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>';
+      reviewSec.style.display = 'none';
+    }
+
+    /* =========================================
+       UI 更新輔助
+       ========================================= */
+    function updateUI() {
+      modeLabel.textContent = (mode === 'practice' ? '練習' : '測驗');
+      typeLabel.textContent = targetType;
+      updateProgress();
+      renderScore();
+      streakEl.textContent = String(streak);
+    }
+
+    function updateProgress() {
+      if (mode === 'exam') {
+        progressEl.textContent = `${counter}/${examTotal}`;
+      } else {
+        progressEl.textContent = '—';
+      }
+    }
+
+    function updatePerQ() {
+      if (mode === 'exam') {
+        const perQ = perScoreFor(examTotal);
+        perQEl.textContent = `${perQ} 分／題（滿分 100）`;
+      } else {
+        perQEl.textContent = '—';
+      }
+    }
+
+    function renderScore() {
+      scoreEl.textContent = (mode === 'exam') ? String(Math.round(score)) : '—';
+    }
+
+    // 每題配分（固定 5/10/20/50 題）
+    function perScoreFor(n) {
+      if (n === 5)  return 20;
+      if (n === 10) return 10;
+      if (n === 20) return 5;
+      if (n === 50) return 2;
+      // 後備：任意題數仍對齊 100 分制
+      return +(100 / n).toFixed(2);
+    }
+
+    /* =========================================
+       出題流程
+       ========================================= */
+    function newQuestion() {
+      locked = false;
+      // 混合：抽權重；練習可指定
+      const type = (mode === 'practice' && targetType !== '混合')
+        ? targetType
+        : (targetType === '混合' ? weightedPick() : targetType);
+
+      current = generateByType(type);
+
+      qEl.textContent = `${current.a} × ${current.b} = ?　（${current.type}）`;
+      tipEl.textContent = '提示：先自己試試看，答錯會顯示解法。';
+
+      renderOptions();
+      updateProgress();
+    }
+
+    // 混合時的題型權重（避免幾乎都落在拆分）
+    function weightedPick() {
+      const bag = [
+        '平方差','平方差','平方差',
+        '接近100','接近100',
+        '尾數互補','尾數互補',
+        '尾數5平方',
+        '倍數/一半',
+        '平方',
+        '拆分','拆分'
+      ];
+      return bag[Math.floor(Math.random() * bag.length)];
+    }
+
+    // 題目生成（依題型）
+    function generateByType(type) {
+      let a, b, tries = 0;
+
+      while (tries < 500) {
+        tries++;
+        a = randInt(10, 99);
+        b = randInt(10, 99);
+
+        if (type === '尾數5平方') {
+          a = randPick([15,25,35,45,55,65,75,85,95]);
+          b = a;
+        } else if (type === '平方') {
+          a = randInt(10, 99);
+          b = a;
+        } else if (type === '接近100') {
+          a = randInt(90, 99);
+          b = randInt(90, 99);
+        } else if (type === '尾數互補') {
+          const t = randInt(1, 9);
+          const u = randPick([1,2,3,4,5,6,7,8,9]);
+          const v = 10 - u;
+          a = t * 10 + u;
+          b = t * 10 + v;
+        } else if (type === '平方差') {
+          const m = randPick([20,30,40,50,60,70,80,90]);
+          const n = randPick([1,2,3,4]);
+          a = m - n;
+          b = m + n;
+        } else if (type === '倍數/一半') {
+          if (Math.random() < 0.4) {
+            a = randPick([25, 50]);
+            b = randInt(10, 99);
+          } else {
+            const pool = [12,14,15,16,18,20,24,28,30,32,36,40,42,44,48];
+            a = randPick(pool);
+            b = randPick(pool);
+          }
+        }
+
+        // 驗證是否符合該題型規則（否則重抽）
+        if (validateType(type, a, b)) {
+          const ans = a * b;
+          const { tip, type: finalType } = decideTip(a, b);
+          return { a, b, ans, tip, type: finalType };
+        }
+      }
+
+      // 理論上不會到這裡；保底回傳
+      const ans = a * b;
+      const { tip, type: finalType } = decideTip(a, b);
+      return { a, b, ans, tip, type: finalType };
+    }
+
+    // 依題型檢核是否合格
+    function validateType(type, a, b) {
+      if (type === '尾數5平方') return (a === b && a % 10 === 5);
+      if (type === '平方')     return (a === b);
+      if (type === '接近100')  return (a >= 90 && b >= 90);
+      if (type === '尾數互補') return (Math.floor(a/10) === Math.floor(b/10) && ((a % 10) + (b % 10) === 10));
+      if (type === '平方差') {
+        const d = Math.abs(a - b);
+        return ((a + b) % 2 === 0) && (d % 2 === 0) && d >= 2 && d <= 8;
+      }
+      if (type === '倍數/一半') {
+        return (
+          (a % 2 === 0 && b % 2 === 0) ||
+          (a % 25 === 0 || b % 25 === 0 || a % 50 === 0 || b % 50 === 0) ||
+          gcd(a, b) > 1
+        );
+      }
+      return true;
+    }
+
+    /* =========================================
+       小工具：亂數、公因數
+       ========================================= */
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function gcd(x, y) { while (y) { [x, y] = [y, x % y]; } return x; }
+
+    /* =========================================
+       心算路徑：對半×加倍（步驟記錄）
+       ========================================= */
+    function halfDoubleSteps(a, b) {
+      let x = a, y = b;
+      const states = [`${x}×${y}`];
+      let moves = 0;
+
+      // 條件：兩數皆為偶數，x > 1，限制最多 4 步，避免太長
+      while (x % 2 === 0 && y % 2 === 0 && x > 1 && moves < 4) {
+        x = x / 2;
+        y = y * 2;
+        moves++;
+        states.push(`${x}×${y}`);
+
+        // 若遇整十/整百，提早結束（方便心算收尾）
+        if (x % 10 === 0 || y % 10 === 0 || x % 100 === 0 || y % 100 === 0) break;
+      }
+      return { text: states.join(' → '), lastX: x, lastY: y };
+    }
+
+    /* =========================================
+       解法判斷：依 a×b 自動挑最順手技巧
+       規則強度：
+       1) 尾數5平方 / 平方
+       2) 尾數互補（同十位、個位和為10）
+       3) 接近100
+       4) 平方差（m−n, m+n）
+       5) 倍數/一半（整百法 → 對半×加倍 → 提公因數）
+       6) 退回拆分法
+       ========================================= */
+    function decideTip(a, b) {
+      const ans = a * b;
+      const same = (a === b);
+      const tensA = Math.floor(a / 10), tensB = Math.floor(b / 10);
+      const onesA = a % 10, onesB = b % 10;
+
+      // 1) 尾數5平方
+      if (same && a % 10 === 5) {
+        const head = Math.floor(a / 10);           // 十位
+        const front = head * (head + 1);           // 前半：t × (t+1)
+        return {
+          tip: `【尾數5平方】前：${head}×(${head}+1)=${front}；後：25 → ${front}25 = ${ans}`,
+          type: '尾數5平方'
+        };
+      }
+
+      // 2) 一般平方（就近整十展開）
+      if (same) {
+        const t = Math.round(a / 10) * 10;         // 就近整十：34→30；67→70
+        const d = Math.abs(a - t);
+        const p1 = t * t, p2 = 2 * t * d, p3 = d * d;
+        if (a >= t) {
+          return {
+            tip: `【平方】(${t}+${d})² = ${t}² + 2×${t}×${d} + ${d}² = ${p1} + ${p2} + ${p3} = ${ans}`,
+            type: '平方'
+          };
+        } else {
+          return {
+            tip: `【平方】(${t}−${d})² = ${t}² − 2×${t}×${d} + ${d}² = ${p1} − ${p2} + ${p3} = ${ans}`,
+            type: '平方'
+          };
+        }
+      }
+
+      // 3) 尾數互補（同十位、個位和為10）
+      if (tensA === tensB && (onesA + onesB === 10)) {
+        const t = tensA;
+        const front = t * (t + 1);                 // 前半：十位 t × (t+1)
+        const back  = onesA * onesB;               // 後半：個位相乘
+        const back2 = back.toString().padStart(2, '0');
+        return {
+          tip: `【尾數互補】前：${t}×(${t}+1)=${front}；後：${onesA}×${onesB}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}`,
+          type: '尾數互補'
+        };
+      }
+
+      // 4) 接近100（Nikhilam）
+      if (a >= 90 && b >= 90) {
+        const da = 100 - a, db = 100 - b;          // 與100的差
+        const front = 100 - (da + db);             // 前半：100 − (差和)
+        const back  = da * db;                     // 後半：差的乘積
+        const back2 = back.toString().padStart(2, '0');
+        return {
+          tip: `【接近100】前：100−(${da}+${db})=${front}；後：${da}×${db}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}`,
+          type: '接近100'
+        };
+      }
+
+      // 5) 平方差（(m−n)(m+n)=m²−n²）
+      // 排除 20/25/50（這些走整百法，不走平方差）
+      {
+        const d = Math.abs(a - b);
+        const blocked = (a === 20 || b === 20 || a === 25 || b === 25 || a === 50 || b === 50);
+        if (!blocked && ((a + b) % 2 === 0) && (d % 2 === 0) && d >= 2 && d <= 8) {
+          const m = (a + b) / 2;
+          const n = d / 2;
+          const m2 = m * m, n2 = n * n;
+          return {
+            tip: `【平方差】(${m}−${n})(${m}+${n}) = ${m}² − ${n}² = ${m2} − ${n2} = ${ans}`,
+            type: '平方差'
+          };
+        }
+      }
+
+      // 6) 倍數/一半（整百法 → 對半×加倍 → 提公因數）
+      const g = gcd(a, b);
+
+      // 6-1) 特殊整百：20/25/50
+      if (a === 20 && b % 5 === 0) {
+        return { tip: `【倍數/一半】20=100÷5 → ${a}×${b} = 100×${b/5} = ${ans}`, type: '倍數/一半' };
+      }
+      if (b === 20 && a % 5 === 0) {
+        return { tip: `【倍數/一半】20=100÷5 → ${a}×${b} = 100×${a/5} = ${ans}`, type: '倍數/一半' };
+      }
+      if (a === 25 && b % 4 === 0) {
+        return { tip: `【倍數/一半】25=100÷4 → ${a}×${b} = 100×${b/4} = ${ans}`, type: '倍數/一半' };
+      }
+      if (b === 25 && a % 4 === 0) {
+        return { tip: `【倍數/一半】25=100÷4 → ${a}×${b} = 100×${a/4} = ${ans}`, type: '倍數/一半' };
+      }
+      if (a === 50 && b % 2 === 0) {
+        return { tip: `【倍數/一半】50=100÷2 → ${a}×${b} = 100×${b/2} = ${ans}`, type: '倍數/一半' };
+      }
+      if (b === 50 && a % 2 === 0) {
+        return { tip: `【倍數/一半】50=100÷2 → ${a}×${b} = 100×${a/2} = ${ans}`, type: '倍數/一半' };
+      }
+
+      // 6-2) 一般化整百（a 或 b 是 25/50 的倍數，且另一邊可被 4/2 整除）
+      if (a % 50 === 0 && b % 2 === 0) {
+        const k = a / 50;
+        return { tip: `【倍數/一半】50=100÷2 → ${a}×${b} = 100×(${k}×${b}/2) = 100×${(k*b)/2} = ${ans}`, type: '倍數/一半' };
+      }
+      if (b % 50 === 0 && a % 2 === 0) {
+        const k = b / 50;
+        return { tip: `【倍數/一半】50=100÷2 → ${a}×${b} = 100×(${k}×${a}/2) = 100×${(k*a)/2} = ${ans}`, type: '倍數/一半' };
+      }
+      if (a % 25 === 0 && b % 4 === 0) {
+        const k = a / 25;
+        return { tip: `【倍數/一半】25=100÷4 → ${a}×${b} = 100×(${k}×${b}/4) = 100×${(k*b)/4} = ${ans}`, type: '倍數/一半' };
+      }
+      if (b % 25 === 0 && a % 4 === 0) {
+        const k = b / 25;
+        return { tip: `【倍數/一半】25=100÷4 → ${a}×${b} = 100×(${k}×${a}/4) = 100×${(k*a)/4} = ${ans}`, type: '倍數/一半' };
+      }
+
+      // 6-3) 兩數皆偶數 → 對半×加倍
+      if (a % 2 === 0 && b % 2 === 0) {
+        const { text } = halfDoubleSteps(a, b);
+        return { tip: `【倍數/一半】對半×加倍：${text} = ${ans}`, type: '倍數/一半' };
+      }
+
+      // 6-4) 有公因數 → 先提公因數
+      if (g > 1) {
+        const m = a / g, n = b / g;
+        return { tip: `【倍數/一半】先提公因數：${a}×${b} = (${g}×${m})×(${g}×${n}) = ${g}²×(${m}×${n}) = ${g*g}×${m*n} = ${ans}`, type: '倍數/一半' };
+      }
+
+      // 7) 拆分法 fallback： (A0+aU)(B0+bU) = 四項展開
+      const aT = tensA, aU = onesA, bT = tensB, bU = onesB;
+      const p1 = (aT * 10) * (bT * 10);
+      const p2 = (aT * 10) * bU;
+      const p3 = aU * (bT * 10);
+      const p4 = aU * bU;
+      return {
+        tip: `【拆分】(${aT}0+${aU})×(${bT}0+${bU}) = ${p1} + ${p2} + ${p3} + ${p4} = ${ans}`,
+        type: '拆分'
+      };
+    }
+
+    /* =========================================
+       建立選項（正解 + 干擾）
+       ========================================= */
+    function buildOptions(ans) {
+      const s = new Set([ans]);
+
+      // 先放一些靠近答案的干擾值
+      while (s.size < 2) s.add(ans + randInt(-25, 25));
+
+      const rounded = Math.round(ans / 10) * 10;
+      if (rounded > 0) s.add(rounded);
+
+      if (ans > 99) s.add(ans - (ans % 10 || 10));
+
+      s.add(ans + (10 * (randInt(-2, 2))));
+
+      let arr = Array.from(s).filter(x => x > 0);
+      while (arr.length < 4) {
+        const w = ans + randInt(-40, 40);
+        if (w > 0 && !arr.includes(w)) arr.push(w);
+      }
+      arr = arr.slice(0, 4);
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    /* =========================================
+       出題與作答流程
+       ========================================= */
+    function renderOptions() {
+      const ops = buildOptions(current.ans);
+      optsEl.innerHTML = '';
+      ops.forEach(val => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.textContent = String(val);
+        btn.addEventListener('click', () => choose(val, btn));
+        optsEl.appendChild(btn);
+      });
+    }
+
+    function choose(val, btn) {
+      if (locked) return;
+      locked = true;
+
+      const all = Array.from(document.querySelectorAll('button.option'));
+      const correctBtn = all.find(b => Number(b.textContent) === current.ans);
+
+      if (val === current.ans) {
+        btn.classList.add('correct');
+        if (mode === 'exam') {
+          const perQ = perScoreFor(examTotal);
+          score += perQ; // 答對才加分
+        }
+        streak += 1;
+        tipEl.innerHTML = `✅ 答對！${mode==='exam' ? `本題 +${perScoreFor(examTotal)} 分　` : ''}<span class="muted">🔥 連對 ${streak} 題！</span>`;
+      } else {
+        btn.classList.add('wrong');
+        if (correctBtn) correctBtn.classList.add('correct');
+        streak = 0;
+        tipEl.innerHTML = `❌ 答錯！<br>解法：${current.tip}`;
+        if (mode === 'exam') {
+          wrongLog.push({
+            q: `${current.a} × ${current.b}`,
+            type: current.type,
+            your: val,
+            ans: current.ans,
+            tip: current.tip
+          });
+        }
+      }
+
+      renderScore();
+
+      if (mode === 'exam') {
+        counter += 1;
+        updateProgress();
+        setTimeout(() => {
+          if (counter >= examTotal) {
+            endExam();
+          } else {
+            newQuestion();
+          }
+        }, 600);
+      } else {
+        setTimeout(() => { locked = false; }, 200);
+      }
+    }
+
+    function endExam() {
+      locked = true;
+      document.querySelectorAll('button.option').forEach(b => b.disabled = true);
+      const finalScore = Math.round(score); // 百分制整數
+      qEl.textContent = `測驗結束！你的分數：${finalScore} / 100（共 ${examTotal} 題）`;
+      tipEl.innerHTML = '下方列出本次測驗的錯題與解法，可按「匯出錯題 CSV」。';
+      showReview();
+    }
+
+    /* =========================================
+       回顧區
+       ========================================= */
+    function showReview() {
+      reviewSec.style.display = 'block';
+      reviewList.innerHTML = '';
+
+      if (wrongLog.length === 0) {
+        reviewEmpty.style.display = 'block';
+        return;
+      }
+      reviewEmpty.style.display = 'none';
+
+      wrongLog.forEach((it, idx) => {
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `
+          <div class="q">#${idx + 1}　${it.q}　<span class="muted">（${it.type}）</span></div>
+          <div>你的答案：<span class="you">${it.your}</span>　｜　正確：<span class="ans">${it.ans}</span></div>
+          <div class="how">解法：${it.tip}</div>
+        `;
+        reviewList.appendChild(div);
+      });
+
+      reviewSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* =========================================
+       匯出錯題 CSV
+       ========================================= */
+    function exportWrongCSV() {
+      if (!wrongLog.length) {
+        alert('這次測驗沒有錯題可匯出。');
+        return;
+      }
+      const header = ['題目','題型','你的答案','正確答案','解法'];
+      const rows = wrongLog.map(r => [r.q, r.type, String(r.your), String(r.ans), r.tip]);
+
+      const csv = [header, ...rows]
+        .map(row => row.map(csvEscape).join(','))
+        .join('\r\n');
+
+      // 在檔頭加上 BOM，避免 Excel 亂碼
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wrong_questions.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // CSV 欄位轉義（含逗號/雙引號需加引號，並將內部 " 轉為 ""）
+    function csvEscape(val) {
+      const s = (val ?? '').toString().replace(/\r?\n/g, ' ');
+      return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+  </script>
+</body>
+</html>

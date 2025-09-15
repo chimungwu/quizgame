@@ -176,8 +176,15 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   }
 }
 @media (max-width: 480px){
+  /* 讓頁面能捲動（sticky 才有意義） */
+  body{ display:block; }
+
+  /* 把 sticky 放在可捲動的上下文裡 */
   .row.controls{
-    position: sticky; bottom: 0; z-index: 10;
+    position: sticky;
+    bottom: 8px;
+    z-index: 10;
+
     background: rgba(11,18,32,.85);
     backdrop-filter: blur(8px);
     padding: 10px;

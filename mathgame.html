@@ -75,6 +75,7 @@ h1{ margin:0 0 6px; font-size:clamp(28px,4vw,40px); }
   border:1px solid var(--border);
   letter-spacing:1px;
   color: var(--txt);
+  margin-bottom: 10px;  /* ← 題目和選項之間留白 */
 }
 
 /* 選項區（2欄） */
@@ -191,7 +192,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   .row{ gap:8px; }
   .pill{ font-size:15px; padding:8px 12px; line-height:1.3; white-space:normal; }
 
-  .options{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .options{ grid-template-columns:repeat(2,1fr); gap:10px; }
     
   button.option{ font-size:18px; padding:16px 14px; border-radius:16px; }
 

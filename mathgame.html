@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>🎮 兩位數乘法速算遊戲</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    h1 { color: darkblue; }
+    button { margin: 10px; padding: 10px 20px; font-size: 18px; }
+    .question { font-size: 24px; margin: 20px; }
+    .result { font-size: 20px; margin: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🎮 100以內兩位數乘法速算遊戲</h1>
+  <div class="question" id="question">按下「下一題」開始</div>
+  <div id="options"></div>
+  <div class="result" id="result"></div>
+  <button onclick="newQuestion()">下一題</button>
+
+  <script>
+    let currentAnswer = 0;
+    let currentTip = "";
+
+    function generateQuestion() {
+      let a = Math.floor(Math.random() * 90) + 10; // 10~99
+      let b = Math.floor(Math.random() * 90) + 10; // 10~99
+      let ans = a * b;
+      let tip = "";
+
+      if (a === b && a % 10 === 5) {
+        tip = "尾數5公式：頭數×(頭數+1)，尾巴25";
+      } else if (a === b) {
+        tip = "平方公式：(a±b)²";
+      } else if (Math.floor(a/10) === Math.floor(b/10) && (a%10 + b%10 === 10)) {
+        tip = "尾數互補：十位×(十位+1)，個位數相乘放後面";
+      } else if (a > 89 && b > 89) {
+        tip = "接近100：用差值法 (100−差)｜差的乘積放後面";
+      } else if (Math.abs(a-b) === 2 && (a+b)%2 === 0) {
+        tip = "平方差公式：(m−n)(m+n)=m²−n²";
+      } else {
+        tip = "拆分法：十位×十位 + 十位×個位...";
+      }
+
+      return {a, b, ans, tip};
+    }
+
+    function newQuestion() {
+      let q = generateQuestion();
+      currentAnswer = q.ans;
+      currentTip = q.tip;
+      document.getElementById("question").innerText = `${q.a} × ${q.b} = ?`;
+
+      // 建立四個選項（隨機放正解）
+      let options = [];
+      options.push(q.ans);
+      while (options.length < 4) {
+        let wrong = q.ans + Math.floor(Math.random()*50) - 25;
+        if (wrong > 0 && !options.includes(wrong)) options.push(wrong);
+      }
+      options.sort(() => Math.random()-0.5);
+
+      let optHtml = "";
+      options.forEach((opt, i) => {
+        optHtml += `<button onclick="checkAnswer(${opt})">${opt}</button>`;
+      });
+      document.getElementById("options").innerHTML = optHtml;
+      document.getElementById("result").innerText = "";
+    }
+
+    function checkAnswer(choice) {
+      if (choice === currentAnswer) {
+        document.getElementById("result").innerText = "✅ 答對了！";
+      } else {
+        document.getElementById("result").innerText = "❌ 答錯了！提示：" + currentTip;
+      }
+    }
+  </script>
+</body>
+</html>

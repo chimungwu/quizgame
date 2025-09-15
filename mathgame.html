@@ -175,6 +175,28 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     backdrop-filter: blur(6px);
   }
 }
+
+ @media (max-width: 480px){
+  /* 練習模式：把下一題放在題目下方、滿版好按 */
+  body[data-mode="practice"] #nextSlot{ margin-top: 10px; }
+  body[data-mode="practice"] #nextSlot #btnNext{
+    position: static !important; /* 取消你之前的 fixed */
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    font-size: 18px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(13,23,38,.95);
+    border: 1px solid #38bdf8;
+    box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  }
+
+  /* 上方控制列不再被覆蓋（可略小一點預留空間） */
+  body[data-mode="practice"] .scoreboard{ margin-bottom: 0; }
+  body[data-mode="practice"] .wrap{ padding-bottom: 0; }
+}
+
   </style>
 </head>
 <body>

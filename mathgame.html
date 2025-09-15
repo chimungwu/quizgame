@@ -1,80 +1,293 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>🎮 兩位數乘法速算遊戲</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>兩位數乘法速算遊戲</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    h1 { color: darkblue; }
-    button { margin: 10px; padding: 10px 20px; font-size: 18px; }
-    .question { font-size: 24px; margin: 20px; }
-    .result { font-size: 20px; margin: 20px; }
+    :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --good:#22c55e; --bad:#ef4444; }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:linear-gradient(180deg,#0b1220,#0b1325 40%,#0b152a);
+      color:var(--txt); display:flex; min-height:100vh; align-items:center; justify-content:center; padding:20px;
+    }
+    .wrap{width:min(920px,100%); display:grid; gap:16px}
+    .card{
+      background:rgba(17,24,39,.85); border:1px solid #1f2937; border-radius:20px; padding:20px; backdrop-filter:blur(6px);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 6px; font-size:clamp(22px,3.5vw,32px)}
+    .sub{opacity:.8; font-size:14px; margin-bottom:12px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .pill{padding:8px 12px; border-radius:999px; background:#0b1220; border:1px solid #1f2937; font-size:14px}
+    .pill b{color:var(--accent)}
+    .question{
+      font-size:clamp(28px,6vw,44px); text-align:center; padding:16px; border-radius:16px;
+      background:#0b1220; border:1px solid #1f2937; letter-spacing:1px
+    }
+    .options{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+    button.option{
+      padding:14px 10px; font-size:clamp(18px,3.5vw,22px); border-radius:14px; border:1px solid #374151;
+      background:#0d1726; color:var(--txt); cursor:pointer; transition:.15s transform,.15s background,.15s border;
+    }
+    button.option:hover{transform:translateY(-1px); background:#0f1c30}
+    button.option.correct{border-color:rgba(34,197,94,.7); background:rgba(34,197,94,.1)}
+    button.option.wrong{border-color:rgba(239,68,68,.7); background:rgba(239,68,68,.08)}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+    .btn{
+      padding:10px 14px; border-radius:12px; border:1px solid #374151; background:#0d1726; color:var(--txt);
+      cursor:pointer; font-size:16px
+    }
+    .btn.primary{border-color:var(--accent); background:rgba(56,189,248,.1)}
+    .btn.danger{border-color:#ef4444; background:rgba(239,68,68,.1)}
+    .tip{
+      font-size:14px; border-left:3px solid var(--accent); padding:10px 12px; background:#0b1220; border-radius:8px; opacity:.95
+    }
+    .scoreboard{display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap}
+    .muted{opacity:.7}
+    .big{font-size:clamp(20px,3.5vw,26px)}
+    .hidden{display:none}
+    footer{opacity:.6; font-size:12px; text-align:center}
   </style>
 </head>
 <body>
-  <h1>🎮 100以內兩位數乘法速算遊戲</h1>
-  <div class="question" id="question">按下「下一題」開始</div>
-  <div id="options"></div>
-  <div class="result" id="result"></div>
-  <button onclick="newQuestion()">下一題</button>
+  <main class="wrap">
+    <section class="card">
+      <h1>🎮 100 以內兩位數乘法速算遊戲</h1>
+      <div class="sub">包含：拆分法、靠近整十、平方差、接近 100、尾數互補、尾數 5、倍數/一半、平方</div>
+      <div class="scoreboard">
+        <div class="row">
+          <div class="pill">模式：<b id="modeLabel">練習</b></div>
+          <div class="pill">分數：<b id="score">0</b></div>
+          <div class="pill">剩餘時間：<b id="time">—</b></div>
+          <div class="pill">連續答對：<b id="streak">0</b></div>
+        </div>
+        <div class="row controls">
+          <button class="btn" id="btnPractice">練習模式</button>
+          <button class="btn primary" id="btnChallenge">30 秒挑戰</button>
+          <button class="btn" id="btnNext">下一題</button>
+          <button class="btn danger" id="btnReset">重置</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div id="question" class="question">按「練習模式」或「30 秒挑戰」開始</div>
+      <div id="options" class="options"></div>
+    </section>
+
+    <section class="card">
+      <div class="tip" id="tip">提示會顯示在這裡（答錯或按下一題後出現）。</div>
+    </section>
+
+    <footer>答對 +10 分，答錯 −5 分；挑戰模式 30 秒內盡量作答。</footer>
+  </main>
 
   <script>
-    let currentAnswer = 0;
-    let currentTip = "";
+    // 狀態
+    let mode = 'practice';           // 'practice' | 'challenge'
+    let score = 0;
+    let streak = 0;
+    let timeLeft = null;             // 秒
+    let timerId = null;
+    let current = null;              // {a,b,ans,tip}
+    let locked = false;              // 防止重複點擊
 
-    function generateQuestion() {
-      let a = Math.floor(Math.random() * 90) + 10; // 10~99
-      let b = Math.floor(Math.random() * 90) + 10; // 10~99
-      let ans = a * b;
-      let tip = "";
+    // DOM
+    const modeLabel = document.getElementById('modeLabel');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const streakEl = document.getElementById('streak');
+    const qEl = document.getElementById('question');
+    const optsEl = document.getElementById('options');
+    const tipEl = document.getElementById('tip');
+    const btnPractice = document.getElementById('btnPractice');
+    const btnChallenge = document.getElementById('btnChallenge');
+    const btnNext = document.getElementById('btnNext');
+    const btnReset = document.getElementById('btnReset');
 
-      if (a === b && a % 10 === 5) {
-        tip = "尾數5公式：頭數×(頭數+1)，尾巴25";
-      } else if (a === b) {
-        tip = "平方公式：(a±b)²";
-      } else if (Math.floor(a/10) === Math.floor(b/10) && (a%10 + b%10 === 10)) {
-        tip = "尾數互補：十位×(十位+1)，個位數相乘放後面";
-      } else if (a > 89 && b > 89) {
-        tip = "接近100：用差值法 (100−差)｜差的乘積放後面";
-      } else if (Math.abs(a-b) === 2 && (a+b)%2 === 0) {
-        tip = "平方差公式：(m−n)(m+n)=m²−n²";
-      } else {
-        tip = "拆分法：十位×十位 + 十位×個位...";
+    // 事件
+    btnPractice.addEventListener('click', () => startPractice());
+    btnChallenge.addEventListener('click', () => startChallenge());
+    btnNext.addEventListener('click', () => { if(!locked) newQuestion(); });
+    btnReset.addEventListener('click', resetAll);
+
+    // 工具：生成題目 + 技巧提示
+    function generateQuestion(){
+      const a = randInt(10,99);
+      const b = randInt(10,99);
+      const ans = a*b;
+      const tip = decideTip(a,b);
+      return {a,b,ans,tip};
+    }
+    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    function decideTip(a,b){
+      // 尾數是 5 的平方
+      if(a===b && a%10===5){
+        const head = Math.floor(a/10);
+        return `尾數 5：${head}×(${head}+1)=${head*(head+1)}｜尾巴 25 → ${a}×${a}`;
       }
-
-      return {a, b, ans, tip};
+      // 平方 (a±b)^2
+      if(a===b){
+        const t = Math.round(a/10)*10;
+        const d = Math.abs(a - t);
+        return `平方：( ${t}±${d} )² = ${t}² ± 2×${t}×${d} + ${d}²`;
+      }
+      // 尾數互補（十位相同、個位互補 10）
+      if(Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10)){
+        const t = Math.floor(a/10);
+        const u = a%10, v = b%10;
+        return `尾數互補：${t}×(${t}+1)｜${u}×${v} → 前面 ${t*(t+1)}｜後面 ${u*v}`;
+      }
+      // 接近 100
+      if(a>=90 && b>=90){
+        const da = 100 - a, db = 100 - b;
+        return `接近 100：前面 100−(${da}+${db})｜後面 ${da}×${db}（兩位數補零）`;
+      }
+      // 平方差 (m−n)(m+n)=m²−n²
+      if( Math.abs(a-b)===2 && ((a+b)%2===0) ){
+        const m = (a+b)/2, n = Math.abs(a-b)/2;
+        return `平方差：( ${m}−${n} )( ${m}+${n} ) = ${m}² − ${n}²`;
+      }
+      // 倍數/一半
+      if(a%25===0 || b%25===0 || a%50===0 || b%50===0 || a%b===0 || b%a===0){
+        return `倍數／一半：先把 25 當 100÷4、50 當 100÷2，或先做可整除的乘除再計算。`;
+      }
+      // 拆分法 fallback
+      const aT=Math.floor(a/10), aU=a%10, bT=Math.floor(b/10), bU=b%10;
+      return `拆分法：(${aT}0+${aU})×(${bT}0+${bU}) → 十位×十位 + 十位×個位…`;
     }
 
-    function newQuestion() {
-      let q = generateQuestion();
-      currentAnswer = q.ans;
-      currentTip = q.tip;
-      document.getElementById("question").innerText = `${q.a} × ${q.b} = ?`;
-
-      // 建立四個選項（隨機放正解）
-      let options = [];
-      options.push(q.ans);
-      while (options.length < 4) {
-        let wrong = q.ans + Math.floor(Math.random()*50) - 25;
-        if (wrong > 0 && !options.includes(wrong)) options.push(wrong);
+    // 生成選項（含正解 + 干擾項）
+    function buildOptions(ans){
+      const s = new Set([ans]);
+      // 1) 近似值
+      while(s.size<2){ s.add(ans + randInt(-25,25)); }
+      // 2) 四捨五入錯誤
+      const rounded = Math.round(ans/10)*10;
+      if(rounded>0) s.add(rounded);
+      // 3) 位移錯誤（少一個 0 或多一個 0，但限制在範圍內）
+      if(ans>99) s.add(ans - (ans%10||10));
+      // 4) 乘數偏差
+      s.add(ans + (10*(randInt(-2,2))));
+      // 清洗
+      let arr = Array.from(s).filter(x=>x>0);
+      // 補足到 4 個
+      while(arr.length<4){
+        const w = ans + randInt(-40,40);
+        if(w>0 && !arr.includes(w)) arr.push(w);
       }
-      options.sort(() => Math.random()-0.5);
+      // 只取 4 個
+      arr = arr.slice(0,4);
+      // 洗牌
+      return arr.sort(()=>Math.random()-0.5);
+    }
 
-      let optHtml = "";
-      options.forEach((opt, i) => {
-        optHtml += `<button onclick="checkAnswer(${opt})">${opt}</button>`;
+    // 出題
+    function newQuestion(){
+      locked = false;
+      current = generateQuestion();
+      qEl.textContent = `${current.a} × ${current.b} = ?`;
+      tipEl.textContent = '提示：先自己試試看，答錯會顯示解法。';
+      renderOptions();
+    }
+
+    function renderOptions(){
+      const ops = buildOptions(current.ans);
+      optsEl.innerHTML = '';
+      ops.forEach(val=>{
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.textContent = val;
+        btn.addEventListener('click', ()=> choose(val, btn));
+        optsEl.appendChild(btn);
       });
-      document.getElementById("options").innerHTML = optHtml;
-      document.getElementById("result").innerText = "";
     }
 
-    function checkAnswer(choice) {
-      if (choice === currentAnswer) {
-        document.getElementById("result").innerText = "✅ 答對了！";
-      } else {
-        document.getElementById("result").innerText = "❌ 答錯了！提示：" + currentTip;
+    // 作答
+    function choose(val, btn){
+      if(locked) return;
+      locked = true;
+      const all = Array.from(document.querySelectorAll('button.option'));
+      const correctBtn = all.find(b => Number(b.textContent) === current.ans);
+      if(val === current.ans){
+        btn.classList.add('correct');
+        score += 10;
+        streak += 1;
+        tipEl.innerHTML = `✅ 答對！<span class="muted">+10 分</span>${streak>=3?`　🔥 連對 ${streak} 題！`:''}`;
+      }else{
+        btn.classList.add('wrong');
+        if(correctBtn) correctBtn.classList.add('correct');
+        score -= 5;
+        streak = 0;
+        tipEl.innerHTML = `❌ 答錯！<br>解題提示：${current.tip}　<span class="muted">（−5 分）</span>`;
+      }
+      updateUI();
+
+      // 挑戰模式自動換題；練習模式 1.2 秒後自動下一題（也可按「下一題」）
+      if(mode==='challenge'){
+        setTimeout(()=>{ if(timeLeft>0) newQuestion(); }, 600);
+      }else{
+        setTimeout(()=>{ locked=false; }, 200);
       }
     }
+
+    // 模式
+    function startPractice(){
+      stopTimer();
+      mode='practice'; modeLabel.textContent='練習';
+      timeLeft = null; timeEl.textContent='—';
+      score = 0; streak = 0; updateUI();
+      newQuestion();
+    }
+
+    function startChallenge(){
+      mode='challenge'; modeLabel.textContent='挑戰（30 秒）';
+      score = 0; streak = 0; updateUI();
+      timeLeft = 30; timeEl.textContent = timeLeft+'s';
+      newQuestion();
+      stopTimer();
+      timerId = setInterval(()=>{
+        timeLeft--;
+        timeEl.textContent = timeLeft+'s';
+        if(timeLeft<=0){
+          stopTimer();
+          lockAll();
+          qEl.textContent = `時間到！你的分數：${score}`;
+          tipEl.innerHTML = `🔔 建議多練：若常看到「拆分法」提示，代表先練基礎展開；若常出現「接近 100」或「平方差」，下次遇到靠近整十/整百就要想到。`;
+        }
+      },1000);
+    }
+
+    function lockAll(){
+      locked = true;
+      document.querySelectorAll('button.option').forEach(b=>b.disabled=true);
+    }
+
+    function stopTimer(){
+      if(timerId){ clearInterval(timerId); timerId=null; }
+    }
+
+    function resetAll(){
+      stopTimer();
+      mode='practice'; modeLabel.textContent='練習';
+      score=0; streak=0; timeLeft=null;
+      updateUI();
+      qEl.textContent = '按「練習模式」或「30 秒挑戰」開始';
+      optsEl.innerHTML = '';
+      tipEl.textContent = '提示會顯示在這裡（答錯或按下一題後出現）。';
+    }
+
+    function updateUI(){
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      if(timeLeft===null) timeEl.textContent='—';
+    }
+
+    // 預設載入練習模式
+    // startPractice();
   </script>
 </body>
 </html>

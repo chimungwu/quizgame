@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>兩位數乘法速算遊戲</title>
+  <title>兩位數乘法速算練習／測驗</title>
   <style>
     :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --good:#22c55e; --bad:#ef4444; }
     *{box-sizing:border-box}
@@ -12,7 +12,7 @@
       background:linear-gradient(180deg,#0b1220,#0b1325 40%,#0b152a);
       color:var(--txt); display:flex; min-height:100vh; align-items:center; justify-content:center; padding:20px;
     }
-    .wrap{width:min(980px,100%); display:grid; gap:16px}
+    .wrap{width:min(1000px,100%); display:grid; gap:16px}
     .card{
       background:rgba(17,24,39,.85); border:1px solid #1f2937; border-radius:20px; padding:20px; backdrop-filter:blur(6px);
       box-shadow:0 10px 30px rgba(0,0,0,.35);
@@ -49,6 +49,13 @@
     .big{font-size:clamp(20px,3.5vw,26px)}
     footer{opacity:.6; font-size:12px; text-align:center}
 
+    .grid{display:grid; gap:10px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    label{font-size:14px; opacity:.9}
+    select, input[type="number"]{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #374151; background:#0b1220; color:var(--txt)
+    }
+
     /* 回顧區塊 */
     #review{display:none}
     .review-title{font-size:20px; margin:0 0 8px}
@@ -65,137 +72,300 @@
 </head>
 <body>
   <main class="wrap">
+    <!-- 1. 控制列 -->
     <section class="card">
-      <h1>🎮 100 以內兩位數乘法速算遊戲</h1>
-      <div class="sub">包含：拆分法、靠近整十、平方差、接近 100、尾數互補、尾數 5、倍數/一半、平方（挑戰結束會列出錯題＋解法）</div>
-      <div class="scoreboard">
+      <h1>🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1>
+      <div class="sub">題型：拆分、平方差、接近100、尾數互補、尾數5平方、倍數/一半、平方；可選練習題型或測驗題數。</div>
+
+      <div class="grid cols-3">
+        <div>
+          <label>模式</label>
+          <select id="modeSelect">
+            <option value="practice">練習模式（不限題數）</option>
+            <option value="exam">測驗模式（指定題數）</option>
+          </select>
+        </div>
+        <div>
+          <label>題型（練習可指定，測驗可選混合或指定）</label>
+          <select id="typeSelect">
+            <option value="混合">混合</option>
+            <option value="拆分">拆分</option>
+            <option value="平方差">平方差</option>
+            <option value="接近100">接近100</option>
+            <option value="尾數互補">尾數互補</option>
+            <option value="尾數5平方">尾數5平方</option>
+            <option value="倍數/一半">倍數/一半</option>
+            <option value="平方">平方</option>
+          </select>
+        </div>
+        <div>
+          <label>測驗題數（僅測驗模式）</label>
+          <select id="examCount">
+            <option value="5">5 題</option>
+            <option value="10">10 題</option>
+            <option value="20">20 題</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="scoreboard" style="margin-top:12px">
         <div class="row">
-          <div class="pill">模式：<b id="modeLabel">練習</b></div>
+          <div class="pill">目前模式：<b id="modeLabel">練習</b></div>
+          <div class="pill">題型：<b id="typeLabel">混合</b></div>
           <div class="pill">分數：<b id="score">0</b></div>
-          <div class="pill">剩餘時間：<b id="time">—</b></div>
+          <div class="pill">進度：<b id="progress">—</b></div>
           <div class="pill">連續答對：<b id="streak">0</b></div>
         </div>
         <div class="row controls">
-          <button class="btn" id="btnPractice">練習模式</button>
-          <button class="btn primary" id="btnChallenge">30 秒挑戰</button>
+          <button class="btn primary" id="btnStart">開始</button>
           <button class="btn" id="btnNext">下一題</button>
           <button class="btn danger" id="btnReset">重置</button>
         </div>
       </div>
     </section>
 
+    <!-- 2. 出題 -->
     <section class="card" id="play">
-      <div id="question" class="question">按「練習模式」或「30 秒挑戰」開始</div>
+      <div id="question" class="question">請選擇模式與題型後按「開始」。</div>
       <div id="options" class="options"></div>
     </section>
 
+    <!-- 3. 提示 -->
     <section class="card">
       <div class="tip" id="tip">提示會顯示在這裡（答錯或按下一題後出現）。</div>
     </section>
 
-    <!-- 回顧區：挑戰結束才顯示 -->
+    <!-- 4. 錯題回顧（測驗結束才顯示） -->
     <section class="card" id="review">
-      <h3 class="review-title">📝 本回合錯題回顧（含解法與正確答案）</h3>
+      <h3 class="review-title">📝 錯題回顧（含解法與正確答案）</h3>
       <div id="reviewList" class="review-list"></div>
-      <div class="empty" id="reviewEmpty">太強了！本回合沒有錯題。</div>
+      <div class="empty" id="reviewEmpty">太強了！這次測驗沒有錯題。</div>
     </section>
 
-    <footer>規則：答對 +10 分，答錯 −5 分；挑戰模式 30 秒內盡量作答。結束後自動列出錯題與解法。</footer>
+    <footer>規則：答對 +10 分，答錯 −5 分；測驗模式會依指定題數結算，並列出錯題與解法。</footer>
   </main>
 
   <script>
     // 狀態
-    let mode = 'practice';           // 'practice' | 'challenge'
+    let mode = 'practice';                 // 'practice' | 'exam'
+    let targetType = '混合';
+    let examTotal = 5;
+    let counter = 0;                       // 已作答題數（測驗模式）
     let score = 0;
     let streak = 0;
-    let timeLeft = null;             // 秒
-    let timerId = null;
-    let current = null;              // {a,b,ans,tip, type}
-    let locked = false;              // 防止重複點擊
-    let wrongLog = [];               // 本回合錯題回顧 [{q, your, ans, tip}]
+    let current = null;                    // {a,b,ans,tip,type}
+    let locked = false;                    // 防重複點擊
+    let wrongLog = [];                     // 測驗錯題回顧 [{q, your, ans, tip, type}]
 
     // DOM
+    const modeSelect = document.getElementById('modeSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const examCount = document.getElementById('examCount');
     const modeLabel = document.getElementById('modeLabel');
+    const typeLabel = document.getElementById('typeLabel');
     const scoreEl = document.getElementById('score');
-    const timeEl = document.getElementById('time');
+    const progressEl = document.getElementById('progress');
     const streakEl = document.getElementById('streak');
     const qEl = document.getElementById('question');
     const optsEl = document.getElementById('options');
     const tipEl = document.getElementById('tip');
-    const btnPractice = document.getElementById('btnPractice');
-    const btnChallenge = document.getElementById('btnChallenge');
-    const btnNext = document.getElementById('btnNext');
-    const btnReset = document.getElementById('btnReset');
     const reviewSec = document.getElementById('review');
     const reviewList = document.getElementById('reviewList');
     const reviewEmpty = document.getElementById('reviewEmpty');
-    const playSec = document.getElementById('play');
+    const btnStart = document.getElementById('btnStart');
+    const btnNext  = document.getElementById('btnNext');
+    const btnReset = document.getElementById('btnReset');
 
     // 事件
-    btnPractice.addEventListener('click', () => startPractice());
-    btnChallenge.addEventListener('click', () => startChallenge());
+    modeSelect.addEventListener('change', () => {
+      mode = modeSelect.value;
+      modeLabel.textContent = (mode==='practice'?'練習':'測驗');
+      updateProgress();
+    });
+    typeSelect.addEventListener('change', () => {
+      targetType = typeSelect.value;
+      typeLabel.textContent = targetType;
+    });
+    examCount.addEventListener('change', () => {
+      examTotal = Number(examCount.value);
+      updateProgress();
+    });
+    btnStart.addEventListener('click', start);
     btnNext.addEventListener('click', () => { if(!locked) newQuestion(); });
     btnReset.addEventListener('click', resetAll);
 
-    // 工具：生成題目 + 技巧提示 + 類型
-    function generateQuestion(){
-      const a = randInt(10,99);
-      const b = randInt(10,99);
-      const ans = a*b;
-      const { tip, type } = decideTip(a,b);
-      return {a,b,ans,tip,type};
+    // 主流程
+    function start(){
+      // 初始化狀態
+      score = 0; streak = 0; counter = 0; wrongLog = [];
+      reviewSec.style.display = 'none';
+      updateUI();
+      newQuestion();
     }
-    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
+    function resetAll(){
+      score=0; streak=0; counter=0; wrongLog=[];
+      updateUI();
+      qEl.textContent = '請選擇模式與題型後按「開始」。';
+      optsEl.innerHTML = '';
+      tipEl.textContent = '提示會顯示在這裡（答錯或按下一題後出現）。';
+      reviewSec.style.display = 'none';
+    }
+
+    function updateUI(){
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      modeLabel.textContent = (mode==='practice'?'練習':'測驗');
+      typeLabel.textContent = targetType;
+      updateProgress();
+    }
+
+    function updateProgress(){
+      if(mode==='exam'){
+        progressEl.textContent = `${counter}/${examTotal}`;
+      }else{
+        progressEl.textContent = '—';
+      }
+    }
+
+    // 生成題目（依題型）
+    function newQuestion(){
+      locked = false;
+
+      const type = (mode==='practice' && targetType!=='混合')
+        ? targetType
+        : (targetType==='混合' ? weightedPick() : targetType);
+
+      current = generateByType(type);
+
+      qEl.textContent = `${current.a} × ${current.b} = ?　（${current.type}）`;
+      tipEl.textContent = '提示：先自己試試看，答錯會顯示解法。';
+      renderOptions();
+
+      // 若是測驗模式，更新進度（顯示「目前第幾題」的感覺在進度欄）
+      updateProgress();
+    }
+
+    // 權重抽題型（混合時使用）
+    function weightedPick(){
+      // 比例可自行調：避免幾乎都落到拆分
+      const bag = [
+        '平方差','平方差','平方差',
+        '接近100','接近100',
+        '尾數互補','尾數互補',
+        '尾數5平方',
+        '倍數/一半',
+        '平方',
+        '拆分','拆分' // 也保留一般題
+      ];
+      return bag[Math.floor(Math.random()*bag.length)];
+    }
+
+    // 依題型產生符合條件的 (a,b)
+    function generateByType(type){
+      let a,b,tries=0;
+      while(tries<500){
+        tries++;
+        a = randInt(10,99);
+        b = randInt(10,99);
+
+        if(type==='尾數5平方'){
+          a = (randPick([15,25,35,45,55,65,75,85,95]));
+          b = a;
+        }else if(type==='平方'){
+          a = randInt(10,99);
+          b = a;
+        }else if(type==='接近100'){
+          a = randInt(90,99); b = randInt(90,99);
+        }else if(type==='尾數互補'){
+          const t = randInt(1,9);
+          const u = randPick([1,2,3,4,5,6,7,8,9]);
+          const v = 10-u;
+          a = t*10 + u; b = t*10 + v;
+        }else if(type==='平方差'){
+          // (m−n)(m+n)，令 m 為整十附近，n=1~4
+          const m = randPick([20,30,40,50,60,70,80,90]);
+          const n = randPick([1,2,3,4]);
+          a = m-n; b = m+n;
+        }else if(type==='倍數/一半'){
+          // 盡量生成可整除或含 25/50 的數
+          if(Math.random()<0.5){
+            a = randPick([25,50]); b = randInt(10,99);
+          }else{
+            const base = randPick([12,14,15,16,18]);
+            const k = randPick([2,3,4,5]);
+            a = base; b = Math.min(99, base*k);
+            if(b<10){ b=base*2; }
+          }
+        }else{
+          // 拆分（一般）：任意兩位數
+          a = randInt(10,99); b = randInt(10,99);
+        }
+
+        // 驗證條件（避免跑出不符合該型的數）
+        if( validateType(type,a,b) ){
+          const ans = a*b;
+          const {tip,type:finalType} = decideTip(a,b);
+          return {a,b,ans,tip,type:finalType};
+        }
+      }
+      // 超過嘗試次數：退回拆分
+      const ans = a*b; const {tip,type:finalType} = decideTip(a,b);
+      return {a,b,ans,tip,type:finalType};
+    }
+
+    function validateType(type,a,b){
+      if(type==='尾數5平方') return (a===b && a%10===5);
+      if(type==='平方')      return (a===b);
+      if(type==='接近100')   return (a>=90 && b>=90);
+      if(type==='尾數互補')  return (Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10));
+      if(type==='平方差')    return (Math.abs(a-b)===2 && ((a+b)%2===0));
+      if(type==='倍數/一半') return (a%25===0 || b%25===0 || a%50===0 || b%50===0 || a%b===0 || b%a===0);
+      return true; // 拆分與混合的其他情況
+    }
+
+    // 工具
+    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+    function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    // 技巧提示（和前版一致）
     function decideTip(a,b){
-      // 尾數 5 的平方
       if(a===b && a%10===5){
         const head = Math.floor(a/10);
         return { tip:`[尾數 5] ${head}×(${head}+1)=${head*(head+1)}，尾巴 25 → ${a}×${a}`, type:'尾數5平方' };
       }
-      // 平方 (a±b)^2
       if(a===b){
         const t = Math.round(a/10)*10;
         const d = Math.abs(a - t);
         return { tip:`[平方] ( ${t}±${d} )² = ${t}² ± 2×${t}×${d} + ${d}²`, type:'平方' };
       }
-      // 尾數互補（十位相同、個位互補 10）
       if(Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10)){
         const t = Math.floor(a/10);
         const u = a%10, v = b%10;
         return { tip:`[尾數互補] 前面：${t}×(${t}+1)=${t*(t+1)}；後面：${u}×${v}（兩位數補零）`, type:'尾數互補' };
       }
-      // 接近 100
       if(a>=90 && b>=90){
         const da = 100 - a, db = 100 - b;
         const front = 100 - (da + db);
         return { tip:`[接近100] 前面：100−(${da}+${db})=${front}；後面：${da}×${db}（兩位數補零）`, type:'接近100' };
       }
-      // 平方差 (m−n)(m+n)=m²−n²
       if( Math.abs(a-b)===2 && ((a+b)%2===0) ){
         const m = (a+b)/2, n = Math.abs(a-b)/2;
         return { tip:`[平方差] ( ${m}−${n} )( ${m}+${n} ) = ${m}² − ${n}²`, type:'平方差' };
       }
-      // 倍數/一半
       if(a%25===0 || b%25===0 || a%50===0 || b%50===0 || a%b===0 || b%a===0){
         return { tip:`[倍數/一半] 先用 25=100÷4、50=100÷2，或先做可整除的乘除再算。`, type:'倍數/一半' };
       }
-      // 拆分法 fallback
       const aT=Math.floor(a/10), aU=a%10, bT=Math.floor(b/10), bU=b%10;
       return { tip:`[拆分] (${aT}0+${aU})×(${bT}0+${bU}) → 十位×十位 + 十位×個位 + 個位×十位 + 個位×個位`, type:'拆分' };
     }
 
-    // 選項（含正解 + 干擾項）
+    // 建立選項（含正解 + 干擾）
     function buildOptions(ans){
       const s = new Set([ans]);
-      // 1) 近似值
       while(s.size<2){ s.add(ans + randInt(-25,25)); }
-      // 2) 四捨五入錯誤
-      const rounded = Math.round(ans/10)*10;
-      if(rounded>0) s.add(rounded);
-      // 3) 位移錯誤（移除個位）
+      const rounded = Math.round(ans/10)*10; if(rounded>0) s.add(rounded);
       if(ans>99) s.add(ans - (ans%10||10));
-      // 4) 乘數偏差
       s.add(ans + (10*(randInt(-2,2))));
       let arr = Array.from(s).filter(x=>x>0);
       while(arr.length<4){
@@ -206,16 +376,7 @@
       return arr.sort(()=>Math.random()-0.5);
     }
 
-    // 出題
-    function newQuestion(){
-      locked = false;
-      current = generateQuestion();
-      qEl.textContent = `${current.a} × ${current.b} = ?　（${current.type}）`;
-      tipEl.textContent = '提示：先自己試試看，答錯會顯示解法。';
-      reviewSec.style.display = 'none'; // 出新題時先隱藏回顧
-      renderOptions();
-    }
-
+    // 出題與作答
     function renderOptions(){
       const ops = buildOptions(current.ans);
       optsEl.innerHTML = '';
@@ -228,7 +389,6 @@
       });
     }
 
-    // 作答
     function choose(val, btn){
       if(locked) return;
       locked = true;
@@ -236,70 +396,45 @@
       const correctBtn = all.find(b => Number(b.textContent) === current.ans);
       if(val === current.ans){
         btn.classList.add('correct');
-        score += 10;
-        streak += 1;
+        score += 10; streak += 1;
         tipEl.innerHTML = `✅ 答對！<span class="muted">+10 分</span>${streak>=3?`　🔥 連對 ${streak} 題！`:''}`;
       }else{
         btn.classList.add('wrong');
         if(correctBtn) correctBtn.classList.add('correct');
-        score -= 5;
-        streak = 0;
-        tipEl.innerHTML = `❌ 答錯！<br>解題提示：${current.tip}　<span class="muted">（−5 分）</span>`;
-        // 記錄錯題
-        wrongLog.push({
-          q: `${current.a} × ${current.b}`,
-          type: current.type,
-          your: val,
-          ans: current.ans,
-          tip: current.tip
-        });
+        score -= 5; streak = 0;
+        tipEl.innerHTML = `❌ 答錯！<br>解法：${current.tip}　<span class="muted">（−5 分）</span>`;
+        if(mode==='exam'){
+          wrongLog.push({ q:`${current.a} × ${current.b}`, type: current.type, your: val, ans: current.ans, tip: current.tip });
+        }
       }
       updateUI();
-      if(mode==='challenge'){
-        setTimeout(()=>{ if(timeLeft>0) newQuestion(); }, 600);
+
+      // 測驗模式：作答一題就 +1，若達標就結算；否則自動下一題
+      if(mode==='exam'){
+        counter += 1; updateProgress();
+        setTimeout(()=>{
+          if(counter >= examTotal){
+            endExam();
+          }else{
+            newQuestion();
+          }
+        }, 600);
       }else{
         setTimeout(()=>{ locked=false; }, 200);
       }
     }
 
-    // 模式
-    function startPractice(){
-      stopTimer();
-      mode='practice'; modeLabel.textContent='練習';
-      timeLeft = null; timeEl.textContent='—';
-      score = 0; streak = 0; wrongLog = []; updateUI();
-      reviewSec.style.display = 'none';
-      newQuestion();
-    }
-
-    function startChallenge(){
-      mode='challenge'; modeLabel.textContent='挑戰（30 秒）';
-      score = 0; streak = 0; wrongLog = []; updateUI();
-      timeLeft = 30; timeEl.textContent = timeLeft+'s';
-      reviewSec.style.display = 'none';
-      newQuestion();
-      stopTimer();
-      timerId = setInterval(()=>{
-        timeLeft--;
-        timeEl.textContent = timeLeft+'s';
-        if(timeLeft<=0){
-          stopTimer();
-          lockAll();
-          qEl.textContent = `時間到！你的分數：${score}`;
-          tipEl.innerHTML = `🔔 結算完成：下方列出本回合的錯題與解法。`;
-          showReview();
-        }
-      },1000);
-    }
-
-    function lockAll(){
+    function endExam(){
+      // 鎖定
       locked = true;
       document.querySelectorAll('button.option').forEach(b=>b.disabled=true);
+      qEl.textContent = `測驗結束！你的分數：${score}（共 ${examTotal} 題）`;
+      tipEl.innerHTML = `下方列出本次測驗的錯題與解法，回顧後可按「重置」重新開始。`;
+      showReview();
     }
 
+    // 回顧
     function showReview(){
-      // 顯示回顧區
-      playSec.scrollIntoView({behavior:'smooth', block:'start'});
       reviewSec.style.display = 'block';
       reviewList.innerHTML = '';
       if(wrongLog.length === 0){
@@ -317,27 +452,8 @@
         `;
         reviewList.appendChild(div);
       });
-    }
-
-    function stopTimer(){
-      if(timerId){ clearInterval(timerId); timerId=null; }
-    }
-
-    function resetAll(){
-      stopTimer();
-      mode='practice'; modeLabel.textContent='練習';
-      score=0; streak=0; timeLeft=null; wrongLog=[];
-      updateUI();
-      qEl.textContent = '按「練習模式」或「30 秒挑戰」開始';
-      optsEl.innerHTML = '';
-      tipEl.textContent = '提示會顯示在這裡（答錯或按下一題後出現）。';
-      reviewSec.style.display = 'none';
-    }
-
-    function updateUI(){
-      scoreEl.textContent = score;
-      streakEl.textContent = streak;
-      if(timeLeft===null) timeEl.textContent='—';
+      // 捲到回顧區
+      reviewSec.scrollIntoView({behavior:'smooth', block:'start'});
     }
   </script>
 </body>

@@ -176,42 +176,31 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   }
 }
     
-/* 只在手機 & 練習模式，把「下一題」變成底部大按鈕 */
 @media (max-width: 480px){
-  /* 預留底部空間，避免內容被固定按鈕遮住 */
-  body[data-mode="practice"] .wrap{
-    padding-bottom: 96px;
+  /* 1) 為了底部固定的「下一題」留空間，避免它壓到上面的控制列 */
+  body[data-mode="practice"] .scoreboard{
+    margin-bottom: 110px; /* 依你 #btnNext 的實際高度微調 96~128px */
   }
 
+  /* 2) 整體內容也多留一些底部空間，避免任何內容被蓋住 */
+  body[data-mode="practice"] .wrap{
+    padding-bottom: 110px; /* 建議與上面相同或略大 */
+  }
+
+  /* 3) （你之前那段）把「下一題」固定在底部的大按鈕 */
   body[data-mode="practice"] #btnNext{
     position: fixed;
-    left: 12px;
-    right: 12px;
+    left: 12px; right: 12px;
     bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 1000;
-
-    /* 變大、好點、醒目 */
-    min-height: 52px;
-    font-size: 18px;
-    padding: 16px 18px;
+    min-height: 52px; font-size: 18px; padding: 16px 18px;
     border-radius: 16px;
-
-    /* 原本的 .btn 視覺基礎上再加強 */
     background: rgba(13,23,38,.95);
-    border: 1px solid #38bdf8;        /* 稍微強化 */
+    border: 1px solid #38bdf8;
     box-shadow: 0 10px 28px rgba(0,0,0,.35);
-
-    /* 觸控細節 */
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  /* 按下去的手感 */
-  body[data-mode="practice"] #btnNext:active{
-    transform: scale(0.985);
-    background: #0f1c30;
   }
 }
+
 
   </style>
 </head>

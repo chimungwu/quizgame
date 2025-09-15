@@ -234,7 +234,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       <h1 style="color:#black;">🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1>
       <div class="sub" style="color:#grey;">
         <b>練習模式：</b>不計分，只練習題型與解法提示。<br />
-        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；結束後提供錯題回顧與 CSV 匯出。<br />
+        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分。<br />
         💻 程式設計：<a href="https://drwu.carrd.co" target="_blank">仨寶爸中醫博士吳啓銘</a>
       </div>
 
@@ -300,7 +300,6 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     <section class="card">
       <div class="tip" id="tip">
         提示會顯示在這裡（答錯或按下一題後出現）。<br />
-        <span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>
       </div>
     </section>
 
@@ -318,7 +317,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
 
     <footer>
       練習模式：<b>不計分</b>
-      ｜ 測驗模式：<b>滿分 100</b>（5/10/20/50 題對應每題 20/10/5/2 分；答對才加分）。
+      ｜ 測驗模式：<b>滿分 100</b>（5/10/20/50 題對應每題 20/10/5/2 分）。
     </footer>
   </main>
 
@@ -406,7 +405,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       updateUI();
       qEl.textContent = '請選擇模式與題型後按「開始」。';
       optsEl.innerHTML = '';
-      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>';
+      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br>';
       reviewSec.style.display = 'none';
     }
 

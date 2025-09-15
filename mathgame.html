@@ -808,19 +808,21 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
 
       renderScore();
 
-      if (mode === 'exam') {
-        counter += 1;
-        updateProgress();
-        setTimeout(() => {
-          if (counter >= examTotal) {
-            endExam();
-          } else {
-            newQuestion();
-          }
-        }, 600);
-      } else {
-        setTimeout(() => { locked = false; }, 200);
-      }
+if(mode==='exam'){
+  counter += 1;
+  updateProgress();
+  // ✅ 測驗模式：延長答錯顯示時間
+  const delay = (val === current.ans) ? 600 : 1500;  
+  setTimeout(()=>{
+    if(counter >= examTotal){
+      endExam();
+    }else{
+      newQuestion();
+    }
+  }, delay);
+}else{
+  setTimeout(()=>{ locked=false; }, 200);
+}
     }
 
     function endExam() {

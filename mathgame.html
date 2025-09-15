@@ -357,15 +357,15 @@
     function gcd(x,y){ while(y){ [x,y]=[y,x%y]; } return x; }
 
     // 對半×加倍步驟：以狀態陣列記錄，避免重複節點
-    function halfDoubleSteps(a,b){
-      let x=a, y=b, states=[`${x}×${y}`];
-      let moves=0;
-      while(x%2===0 && y%2===0 && x>1 && moves<4){
-        x = x/2; y = y*2; moves++;
-        states.push(`${x}×${y}`);
-      }
-      return { text: states.join(' → '), lastX:x, lastY:y };
-    }
+function halfDoubleSteps(a,b){
+  let x=a, y=b, states=[`${x}×${y}`];
+  let moves=0;
+  while(x%2===0 && y%2===0 && x>1 && moves<4){
+    x = x/2; y = y*2; moves++;
+    states.push(`${x}×${y}`);
+  }
+  return { text: states.join(' → '), lastX:x, lastY:y };
+}
 
     // ===== 核心：更精準可讀的「解法」產生 =====
     function decideTip(a,b){
@@ -439,10 +439,10 @@
       }
 
       // B) 兩數皆偶數 → 對半×加倍
-      if(a%2===0 && b%2===0){
-        const {text} = halfDoubleSteps(a,b);
-        return { tip:`[倍數/一半] 對半×加倍：${text} = ${ans}`, type:'倍數/一半' };
-      }
+if(a%2===0 && b%2===0){
+  const {text} = halfDoubleSteps(a,b);
+  return { tip:`[倍數/一半] 對半×加倍：${text} = ${ans}`, type:'倍數/一半' };
+}
 
       // C) 其餘：先提公因數（若有），否則走拆分
       if(g>1){

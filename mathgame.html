@@ -175,35 +175,44 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     backdrop-filter: blur(6px);
   }
 }
+    
+/* 只在手機 & 練習模式，把「下一題」變成底部大按鈕 */
 @media (max-width: 480px){
-  /* 讓頁面可以正常捲動，別用 flex 置中整頁 */
-  body{ display:block; }
+  /* 預留底部空間，避免內容被固定按鈕遮住 */
+  body[data-mode="practice"] .wrap{
+    padding-bottom: 96px;
+  }
 
-  /* 底部預留空間，避免被浮動按鈕列蓋住 */
-  .wrap{ padding-bottom: 88px; } /* 依你控制列高度調整 */
-
-  .row.controls{
+  body[data-mode="practice"] #btnNext{
     position: fixed;
     left: 12px;
     right: 12px;
     bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 1000;
 
-    background: rgba(11,18,32,.92);
-    backdrop-filter: blur(8px);
-    padding: 10px;
-    border-radius: 14px;
-    border: 1px solid #1f2937;
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    /* 變大、好點、醒目 */
+    min-height: 52px;
+    font-size: 18px;
+    padding: 16px 18px;
+    border-radius: 16px;
+
+    /* 原本的 .btn 視覺基礎上再加強 */
+    background: rgba(13,23,38,.95);
+    border: 1px solid #38bdf8;        /* 稍微強化 */
+    box-shadow: 0 10px 28px rgba(0,0,0,.35);
+
+    /* 觸控細節 */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
-  /* 讓三顆按鈕在手機上好點、等寬 */
-  .row.controls .btn{
-    flex:1 1 auto;
-    min-height: 48px;
-    font-size: 17px;
+  /* 按下去的手感 */
+  body[data-mode="practice"] #btnNext:active{
+    transform: scale(0.985);
+    background: #0f1c30;
   }
 }
+
   </style>
 </head>
 <body>
@@ -337,6 +346,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       updatePerQ();
       updateProgress();
       renderScore();
+      refreshModeFlag();
     });
     typeSelect.addEventListener('change', () => {
       targetType = typeSelect.value;
@@ -369,7 +379,9 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法（可整除時）、或「先提公因數」。</span>';
       reviewSec.style.display = 'none';
     }
-
+function refreshModeFlag(){
+  document.body.setAttribute('data-mode', mode);
+}
     // UI 更新
     function updateUI(){
       modeLabel.textContent = (mode==='practice'?'練習':'測驗');
@@ -377,6 +389,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       updateProgress();
       renderScore();
       streakEl.textContent = streak;
+      refreshModeFlag();           // ← 加這行
     }
     function updateProgress(){
       if(mode==='exam'){

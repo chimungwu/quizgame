@@ -11,19 +11,19 @@
   <title>兩位數乘法速算｜練習 & 測驗</title>
 
   <style>
-/* ========== 全域變數與基礎樣式（清新藍綠） ========== */
+/* ========== 全域變數與基礎樣式（淺米白主題） ========== */
 :root{
   /* 主題色票 */
-  --bg:            #fdfdf9;   /* 網頁背景（很淡的藍綠白） */
-  --card:          #fffefc;   /* 卡片/題目底 */
-  --card-2:        #f7f3ed;   /* 次級底（選項/回顧） */
-  --card-3:        #a7e4eb;   /* hover/active 較深一點 */
-  --border:        #dcd7d0;   /* 邊框 */
-  --txt:           #222222;   /* 主要文字（深青） */
-  --txt-weak:      #555555;   /* 次要文字 */
-  --accent:        #00838f;   /* 強調色（青藍） */
-  --good:          #2e7d32;   /* 正確 */
-  --bad:           #c62828;   /* 錯誤 */
+  --bg:        #fdfdf9;   /* 網頁背景（淺米白） */
+  --card:      #fffefc;   /* 卡片/題目底 */
+  --card-2:    #f7f3ed;   /* 次級底（選項/回顧） */
+  --card-3:    #ece6de;   /* hover/active 的顏色 */
+  --border:    #dcd7d0;   /* 邊框 */
+  --txt:       #222222;   /* 主文字 */
+  --txt-weak:  #555555;   /* 次要文字 */
+  --accent:    #00838f;   /* 強調色（青藍） */
+  --good:      #2e7d32;   /* 答對綠 */
+  --bad:       #c62828;   /* 答錯紅 */
 
   /* 觸控尺寸 */
   --tap-min: 48px;
@@ -51,7 +51,6 @@ body{
   border-radius:20px;
   padding:20px;
   backdrop-filter:saturate(1.05) blur(2px);
-  /* 淺色主題用柔和陰影 */
   box-shadow: 0 6px 20px rgba(0,0,0,.08);
 }
 
@@ -62,7 +61,7 @@ h1{ margin:0 0 6px; font-size:clamp(28px,4vw,40px); }
 
 .pill{
   padding:8px 12px; border-radius:999px;
-  background: #e8fbfe;
+  background: var(--card-2);
   border:1px solid var(--border);
   font-size:14px; color:var(--txt-weak);
 }
@@ -78,10 +77,10 @@ h1{ margin:0 0 6px; font-size:clamp(28px,4vw,40px); }
   color: var(--txt);
 }
 
-/* 選項區（維持 2 欄） */
+/* 選項區（2欄） */
 .options{
   display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
-  margin-bottom:6px; /* 避免被上方 sticky 擋到 */
+  margin-bottom:6px;
 }
 
 button.option{
@@ -94,31 +93,31 @@ button.option{
   transition:.15s transform,.15s background,.15s border;
 }
 button.option:hover{ transform:translateY(-1px); background: var(--card-3); }
-button.option.correct{ border-color:rgba(34,197,94,.7); background:rgba(34,197,94,.15); color:#0b3d1d; }
-button.option.wrong{ border-color:rgba(239,68,68,.7); background:rgba(239,68,68,.12); color:#7a1e1e; }
+button.option.correct{ border-color:var(--good); background:rgba(46,125,50,.12); color:var(--good); }
+button.option.wrong{ border-color:var(--bad); background:rgba(198,40,40,.12); color:var(--bad); }
 
 /* 控制按鈕 */
 .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
 .btn{
   padding:10px 14px; border-radius:12px;
   border:1px solid var(--border);
-  background: #d8f4f8;
+  background: var(--card-2);
   color: var(--txt);
   cursor:pointer; font-size:16px;
-  transition: .15s background, .15s transform;
+  transition:.15s background,.15s transform;
 }
-.btn:hover{ background:#cdeff4; transform:translateY(-1px); }
+.btn:hover{ background: var(--card-3); transform:translateY(-1px); }
 
-.btn.primary{ border-color: var(--accent); background: rgba(0,188,212,.12); color:#015a63; }
-.btn.danger{ border-color: var(--bad); background: rgba(239,68,68,.12); color:#7a1e1e; }
-.btn.success{ border-color: var(--good); background: rgba(34,197,94,.12); color:#0b3d1d; }
+.btn.primary{ border-color:var(--accent); background: rgba(0,131,143,.12); color:var(--accent); }
+.btn.danger{ border-color:var(--bad); background: rgba(198,40,40,.12); color:var(--bad); }
+.btn.success{ border-color:var(--good); background: rgba(46,125,50,.12); color:var(--good); }
 
 /* 提示區 */
 .tip{
   font-size:14px;
   border-left:3px solid var(--accent);
   padding:10px 12px;
-  background:#e8fbfe;
+  background: var(--card-2);
   border-radius:8px;
   color:var(--txt-weak);
   opacity:.95;
@@ -135,7 +134,7 @@ label{ font-size:14px; opacity:.95; color:var(--txt-weak); }
 select{
   width:100%; padding:10px 12px; border-radius:10px;
   border:1px solid var(--border);
-  background:#e8fbfe;
+  background: var(--card-2);
   color:var(--txt);
 }
 
@@ -156,9 +155,9 @@ select{
 .review-item .how{ font-size:14px; opacity:.9; color:var(--txt-weak); }
 .empty{ opacity:.8; padding:8px 0; color:var(--txt-weak); }
 
-a{ color:#00838f; text-decoration:none; }
+a{ color:var(--accent); text-decoration:none; }
 
-/* === Mobile-friendly 基礎強化：全域觸控體驗 === */
+/* === Mobile-friendly 基礎強化 === */
 button, .btn, .option, select{
   min-height:var(--tap-min);
   -webkit-tap-highlight-color:transparent;
@@ -170,7 +169,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   border-radius:14px;
 }
 
-/* 行為：手機沒有 hover，用 active/pressed 給回饋 */
+/* 行為：手機 active 狀態 */
 @media (hover:none){
   button.option:hover{ transform:none; background: var(--card-2); }
   button.option:active{ transform:scale(0.98); background: var(--card-3); }
@@ -186,31 +185,18 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   .grid.cols-3{ grid-template-columns:1fr; gap:12px; }
   label{ font-size:15px; }
   select{
-    font-size:16px; /* iOS 16px 避免自動放大 */
-    padding:14px 12px; border-radius:12px;
+    font-size:16px; padding:14px 12px; border-radius:12px;
   }
 
   .row{ gap:8px; }
-  .pill{
-    font-size:15px; padding:8px 12px;
-    line-height:1.3; white-space:normal;
-  }
+  .pill{ font-size:15px; padding:8px 12px; line-height:1.3; white-space:normal; }
 
-  .options{
-    grid-template-columns:repeat(2,1fr); gap:10px;
-  }
-
-  button.option{
-    font-size:18px; padding:16px 14px; border-radius:16px;
-  }
+  .options{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    
+  button.option{ font-size:18px; padding:16px 14px; border-radius:16px; }
 
   .controls{ gap:12px; }
-  .controls .btn{
-    flex:1 1 auto;
-    font-size:17px;
-    padding:14px 16px;
-    border-radius:14px;
-  }
+  .controls .btn{ flex:1 1 auto; font-size:17px; padding:14px 16px; border-radius:14px; }
 
   .tip{ font-size:15px; padding:12px; }
 
@@ -223,22 +209,20 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
 
 /* === 中小尺寸（≤ 768px）=== */
 @media (max-width:768px){
-  /* 如果你想讓平板仍保持兩欄，可以註解下一行 */
   .options{ grid-template-columns:1fr; }
   .controls .btn{ min-width:44%; }
 }
 
-/* === 讓控制區在長頁面時更易觸達（明亮版） === */
+/* === Scoreboard sticky（明亮版） === */
 @media (max-width:768px){
   .scoreboard{
     position:sticky; top:8px; z-index:5;
-    background: linear-gradient(180deg, rgba(224,247,250,.95), rgba(224,247,250,.85));
+    background: linear-gradient(180deg, var(--card) .95, var(--card-2) .85);
     border-radius:14px; padding:8px;
     backdrop-filter: blur(6px);
     border:1px solid var(--border);
   }
 }
-
   </style>
 </head>
 

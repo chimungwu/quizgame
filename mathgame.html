@@ -374,114 +374,152 @@ function halfDoubleSteps(a,b){
   return { text: states.join(' → '), lastX:x, lastY:y };
 }
 
-    // ===== 核心：更精準可讀的「解法」產生 =====
-    function decideTip(a,b){
-      const ans = a*b;
+/**
+ * 依題目 a×b 的特徵，自動選擇「最順手」的心算技巧，並回傳說明文字 tip 與題型 type。
+ * 規則順序（由強到弱）：
+ *  1) 特殊平方：尾數5平方、一般平方
+ *  2) 尾數互補（同十位、個位和為10）
+ *  3) 接近100（兩數皆≥90）
+ *  4) 平方差（形如 m−n 與 m+n）
+ *  5) 倍數/一半（先檢查 20/25/50 的整百法 → 再對半×加倍 → 再提公因數）
+ *  6) 最後退回「拆分法」展開
+ */
+function decideTip(a, b) {
+  const ans = a * b;              // 正確答案（用來結尾顯示）
+  const same = (a === b);         // 是否平方情況
+  const tensA = Math.floor(a / 10), tensB = Math.floor(b / 10);
+  const onesA = a % 10, onesB = b % 10;
 
-      // 尾數 5 的平方
-      if(a===b && a%10===5){
-        const head = Math.floor(a/10);
-        const front = head*(head+1);
-        return { tip:`[尾數 5] 前：${head}×(${head}+1)=${front}；後：25 → ${front}25 = ${ans}`, type:'尾數5平方' };
-      }
+  // ——————————— 1) 特殊平方：尾數5平方 ———————————
+  if (same && a % 10 === 5) {
+    const head = Math.floor(a / 10);       // 前面那個十位數
+    const front = head * (head + 1);       // 前半部：t × (t+1)
+    return {
+      tip: `[尾數 5] 前：${head}×(${head}+1)=${front}；後：25 → ${front}25 = ${ans}`,
+      type: '尾數5平方'
+    };
+  }
 
-      // 一般平方
-      if(a===b){
-        const t = Math.round(a/10)*10;
-        const d = Math.abs(a - t);
-        if(a >= t){
-          const p1 = t*t, p2 = 2*t*d, p3 = d*d;
-          return { tip:`[平方] (${t}+${d})² = ${t}² + 2×${t}×${d} + ${d}² = ${p1} + ${p2} + ${p3} = ${ans}`, type:'平方' };
-        }else{
-          const p1 = t*t, p2 = 2*t*d, p3 = d*d;
-          return { tip:`[平方] (${t}−${d})² = ${t}² − 2×${t}×${d} + ${d}² = ${p1} − ${p2} + ${p3} = ${ans}`, type:'平方' };
-        }
-      }
+  // ——————————— 2) 一般平方（用 (整十±d)^2 展開） ———————————
+  if (same) {
+    const t = Math.round(a / 10) * 10;     // 就近的整十數，例如 34 → 30； 67 → 70
+    const d = Math.abs(a - t);             // 與整十差距
+    const p1 = t * t, p2 = 2 * t * d, p3 = d * d;
+    if (a >= t) {
+      return {
+        tip: `[平方] (${t}+${d})² = ${t}² + 2×${t}×${d} + ${d}² = ${p1} + ${p2} + ${p3} = ${ans}`,
+        type: '平方'
+      };
+    } else {
+      return {
+        tip: `[平方] (${t}−${d})² = ${t}² − 2×${t}×${d} + ${d}² = ${p1} − ${p2} + ${p3} = ${ans}`,
+        type: '平方'
+      };
+    }
+  }
 
-      // 尾數互補
-      if(Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10)){
-        const t = Math.floor(a/10);
-        const u = a%10, v = b%10;
-        const front = t*(t+1);
-        const back = u*v;
-        const back2 = back.toString().padStart(2,'0');
-        return { tip:`[尾數互補] 前：${t}×(${t}+1)=${front}；後：${u}×${v}=${back}（補成兩位 ${back2}）→ ${front}${back2} = ${ans}`, type:'尾數互補' };
-      }
+  // ——————————— 3) 尾數互補（同十位、個位和為10） ———————————
+  if (tensA === tensB && (onesA + onesB === 10)) {
+    const t = tensA;
+    const front = t * (t + 1);             // 前半：十位 t × (t+1)
+    const back = onesA * onesB;            // 後半：個位相乘
+    const back2 = back.toString().padStart(2, '0'); // 後半補成「兩位數」
+    return {
+      tip: `[尾數互補] 前：${t}×(${t}+1)=${front}；後：${onesA}×${onesB}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}`,
+      type: '尾數互補'
+    };
+  }
 
-      // 接近100
-      if(a>=90 && b>=90){
-        const da = 100 - a, db = 100 - b;
-        const front = 100 - (da + db);
-        const back = da*db;
-        const back2 = back.toString().padStart(2,'0');
-        return { tip:`[接近100] 前：100−(${da}+${db})=${front}；後：${da}×${db}=${back}（補成兩位 ${back2}）→ ${front}${back2} = ${ans}`, type:'接近100' };
-      }
+  // ——————————— 4) 接近100（Nikhilam：兩數都接近100） ———————————
+  if (a >= 90 && b >= 90) {
+    const da = 100 - a, db = 100 - b;      // 與100的差
+    const front = 100 - (da + db);         // 前半：100 − (差和)
+    const back = da * db;                   // 後半：差的乘積
+    const back2 = back.toString().padStart(2, '0');
+    return {
+      tip: `[接近100] 前：100−(${da}+${db})=${front}；後：${da}×${db}=${back}（補兩位 ${back2}）→ ${front}${back2} = ${ans}`,
+      type: '接近100'
+    };
+  }
 
-      // 平方差
-      if( Math.abs(a-b)===2 && ((a+b)%2===0) ){
-        const m = (a+b)/2, n = Math.abs(a-b)/2;
-        const p1 = m*m, p2 = n*n;
-        return { tip:`[平方差] (${m}−${n})(${m}+${n}) = ${m}² − ${n}² = ${p1} − ${p2} = ${ans}`, type:'平方差' };
-      }
+  // ——————————— 5) 平方差（(m−n)(m+n)=m²−n²） ———————————
+  if (Math.abs(a - b) === 2 && ((a + b) % 2 === 0)) {
+    const m = (a + b) / 2, n = Math.abs(a - b) / 2;
+    const p1 = m * m, p2 = n * n;
+    return {
+      tip: `[平方差] (${m}−${n})(${m}+${n}) = ${m}² − ${n}² = ${p1} − ${p2} = ${ans}`,
+      type: '平方差'
+    };
+  }
 
-      // === 倍數/一半：調整分支順序（先整百 → 再對半 → 再提公因數） ===
-      const g = gcd(a,b);
-// 特殊整百法：20、25、50 (另一數需能整除對應分母)
+  // ——————————— 6) 倍數/一半（依序：整百法 → 對半×加倍 → 提公因數） ———————————
+  const g = gcd(a, b);  // 先求公因數，可能在後面用到
+
+  // 6-1) 特殊整百法：20 / 25 / 50（另一數需可整除分母，才能湊 100）
   if (a === 20 && b % 5 === 0) {
-    return { tip:`[倍數/一半] 20=100÷5 → ${a}×${b} = 100×${b/5} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 20=100÷5 → ${a}×${b} = 100×${b / 5} = ${ans}`, type: '倍數/一半' };
   }
   if (b === 20 && a % 5 === 0) {
-    return { tip:`[倍數/一半] 20=100÷5 → ${a}×${b} = 100×${a/5} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 20=100÷5 → ${a}×${b} = 100×${a / 5} = ${ans}`, type: '倍數/一半' };
   }
-
   if (a === 25 && b % 4 === 0) {
-    return { tip:`[倍數/一半] 25=100÷4 → ${a}×${b} = 100×${b/4} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 25=100÷4 → ${a}×${b} = 100×${b / 4} = ${ans}`, type: '倍數/一半' };
   }
   if (b === 25 && a % 4 === 0) {
-    return { tip:`[倍數/一半] 25=100÷4 → ${a}×${b} = 100×${a/4} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 25=100÷4 → ${a}×${b} = 100×${a / 4} = ${ans}`, type: '倍數/一半' };
   }
-
   if (a === 50 && b % 2 === 0) {
-    return { tip:`[倍數/一半] 50=100÷2 → ${a}×${b} = 100×${b/2} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 50=100÷2 → ${a}×${b} = 100×${b / 2} = ${ans}`, type: '倍數/一半' };
   }
   if (b === 50 && a % 2 === 0) {
-    return { tip:`[倍數/一半] 50=100÷2 → ${a}×${b} = 100×${a/2} = ${ans}`, type:'倍數/一半' };
+    return { tip: `[倍數/一半] 50=100÷2 → ${a}×${b} = 100×${a / 2} = ${ans}`, type: '倍數/一半' };
   }
-      // A) 50/25 整百法（需可整除）
-      if (a%50===0 && b%2===0) {
-        const k = a/50;
-        return { tip:`[倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${b}/2) = 100×${k*b/2} = ${ans}`, type:'倍數/一半' };
-      }
-      if (b%50===0 && a%2===0) {
-        const k = b/50;
-        return { tip:`[倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${a}/2) = 100×${k*a/2} = ${ans}`, type:'倍數/一半' };
-      }
-      if (a%25===0 && b%4===0) {
-        const k = a/25;
-        return { tip:`[倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${b}/4) = 100×${k*b/4} = ${ans}`, type:'倍數/一半' };
-      }
-      if (b%25===0 && a%4===0) {
-        const k = b/25;
-        return { tip:`[倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${a}/4) = 100×${k*a/4} = ${ans}`, type:'倍數/一半' };
-      }
 
-      // B) 兩數皆偶數 → 對半×加倍
-if(a%2===0 && b%2===0){
-  const {text} = halfDoubleSteps(a,b);
-  return { tip:`[倍數/一半] 對半×加倍：${text} = ${ans}`, type:'倍數/一半' };
+  // 6-2) 一般化的整百法（a 或 b 是 25/50 的倍數，且另一邊可被 4/2 整除）
+  if (a % 50 === 0 && b % 2 === 0) {
+    const k = a / 50;
+    return { tip: `[倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${b}/2) = 100×${k * b / 2} = ${ans}`, type: '倍數/一半' };
+  }
+  if (b % 50 === 0 && a % 2 === 0) {
+    const k = b / 50;
+    return { tip: `[倍數/一半] 50=100÷2 → ${a}×${b} = 100×(${k}×${a}/2) = 100×${k * a / 2} = ${ans}`, type: '倍數/一半' };
+  }
+  if (a % 25 === 0 && b % 4 === 0) {
+    const k = a / 25;
+    return { tip: `[倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${b}/4) = 100×${k * b / 4} = ${ans}`, type: '倍數/一半' };
+  }
+  if (b % 25 === 0 && a % 4 === 0) {
+    const k = b / 25;
+    return { tip: `[倍數/一半] 25=100÷4 → ${a}×${b} = 100×(${k}×${a}/4) = 100×${k * a / 4} = ${ans}`, type: '倍數/一半' };
+  }
+
+  // 6-3) 兩數皆偶數 → 對半×加倍（遇到整十/整百就停，方便心算收尾）
+  if (a % 2 === 0 && b % 2 === 0) {
+    const { text } = halfDoubleSteps(a, b);
+    return { tip: `[倍數/一半] 對半×加倍：${text} = ${ans}`, type: '倍數/一半' };
+  }
+
+  // 6-4) 其餘：若有公因數，先提公因數；否則交給拆分法
+  if (g > 1) {
+    const m = a / g, n = b / g;
+    return {
+      tip: `[倍數/一半] 先提公因數：${a}×${b} = (${g}×${m})×(${g}×${n}) = ${g}²×(${m}×${n}) = ${g * g}×${m * n} = ${ans}`,
+      type: '倍數/一半'
+    };
+  }
+
+  // ——————————— 7) 拆分法 fallback： (A0+aU)(B0+bU) 展開四項 ———————————
+  const aT = tensA, aU = onesA, bT = tensB, bU = onesB;
+  const p1 = (aT * 10) * (bT * 10);
+  const p2 = (aT * 10) * bU;
+  const p3 = aU * (bT * 10);
+  const p4 = aU * bU;
+  return {
+    tip: `[拆分] (${aT}0+${aU})×(${bT}0+${bU}) = ${p1} + ${p2} + ${p3} + ${p4} = ${ans}`,
+    type: '拆分'
+  };
 }
 
-      // C) 其餘：先提公因數（若有），否則走拆分
-      if(g>1){
-        const m = a/g, n = b/g;
-        return { tip:`[倍數/一半] 先提公因數：${a}×${b} = (${g}×${m})×(${g}×${n}) = ${g}²×(${m}×${n}) = ${g*g}×${m*n} = ${ans}`, type:'倍數/一半' };
-      }
-
-      // 拆分 fallback
-      const aT=Math.floor(a/10), aU=a%10, bT=Math.floor(b/10), bU=b%10;
-      const p1 = (aT*10)*(bT*10), p2=(aT*10)*bU, p3=aU*(bT*10), p4=aU*bU;
-      return { tip:`[拆分] (${aT}0+${aU})×(${bT}0+${bU}) = ${p1} + ${p2} + ${p3} + ${p4} = ${ans}`, type:'拆分' };
-    }
 
     // 建立選項（含正解 + 干擾）
     function buildOptions(ans){

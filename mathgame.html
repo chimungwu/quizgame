@@ -341,15 +341,18 @@
       return {a,b,ans,tip,type:finalType};
     }
 
-    function validateType(type,a,b){
-      if(type==='尾數5平方') return (a===b && a%10===5);
-      if(type==='平方')      return (a===b);
-      if(type==='接近100')   return (a>=90 && b>=90);
-      if(type==='尾數互補')  return (Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10));
-      if(type==='平方差')    return (Math.abs(a-b)===2 && ((a+b)%2===0));
-      if(type==='倍數/一半') return ( (a%2===0 && b%2===0) || (a%25===0 || b%25===0 || a%50===0 || b%50===0) || gcd(a,b)>1 );
-      return true;
-    }
+function validateType(type,a,b){
+  if(type==='尾數5平方') return (a===b && a%10===5);
+  if(type==='平方')      return (a===b);
+  if(type==='接近100')   return (a>=90 && b>=90);
+  if(type==='尾數互補')  return (Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10));
+  if(type==='平方差') {
+    const d = Math.abs(a-b);
+    return ((a+b)%2===0) && (d%2===0) && d>=2 && d<=8;  
+  }
+  if(type==='倍數/一半') return ( (a%2===0 && b%2===0) || (a%25===0 || b%25===0 || a%50===0 || b%50===0) || gcd(a,b)>1 );
+  return true;
+}
 
     // 工具
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>兩位數乘法速算｜練習 & 測驗（測驗滿分 100）</title>
+  <title>兩位數乘法速算｜練習 & 測驗（簡單百分制）</title>
   <style>
     :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --good:#22c55e; --bad:#ef4444; }
     *{box-sizing:border-box}
@@ -46,7 +46,6 @@
     }
     .scoreboard{display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap}
     .muted{opacity:.7}
-    .big{font-size:clamp(20px,3.5vw,26px)}
     footer{opacity:.7; font-size:12px; text-align:center}
 
     .grid{display:grid; gap:10px}
@@ -76,16 +75,16 @@
     <section class="card">
       <h1>🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1>
       <div class="sub">
-        練習模式：答對 <b>+10</b>、答錯 <b>−5</b>；<br>
-        測驗模式：<b>滿分固定 100 分</b>，每題配分 = 100 ÷ 題數；答對得「每題配分」，答錯扣「每題配分的一半」；結束後提供錯題與解法回顧。
+        <b>練習模式：</b>不計分，只練習題型與解法提示。<br>
+        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；<u>答對加分、答錯不扣分</u>；結束後提供錯題回顧。
       </div>
 
       <div class="grid cols-3">
         <div>
           <label>模式</label>
           <select id="modeSelect">
-            <option value="practice">練習模式（不限題數）</option>
-            <option value="exam">測驗模式（滿分 100 分）</option>
+            <option value="practice">練習模式（不計分）</option>
+            <option value="exam">測驗模式（滿分 100）</option>
           </select>
         </div>
         <div>
@@ -102,11 +101,12 @@
           </select>
         </div>
         <div>
-          <label>測驗題數（僅測驗模式；影響每題配分）</label>
+          <label>測驗題數（僅測驗模式）</label>
           <select id="examCount">
-            <option value="5">5 題（每題 20 分，答錯扣 10 分）</option>
-            <option value="10">10 題（每題 10 分，答錯扣 5 分）</option>
-            <option value="20">20 題（每題 5 分，答錯扣 2.5 分）</option>
+            <option value="5">5 題（每題 20 分）</option>
+            <option value="10" selected>10 題（每題 10 分）</option>
+            <option value="20">20 題（每題 5 分）</option>
+            <option value="50">50 題（每題 2 分）</option>
           </select>
         </div>
       </div>
@@ -115,7 +115,7 @@
         <div class="row">
           <div class="pill">目前模式：<b id="modeLabel">練習</b></div>
           <div class="pill">題型：<b id="typeLabel">混合</b></div>
-          <div class="pill">目前分數：<b id="score">0</b></div>
+          <div class="pill">目前分數：<b id="score">—</b></div>
           <div class="pill">進度：<b id="progress">—</b></div>
           <div class="pill">每題配分（測驗）：<b id="perQ">—</b></div>
           <div class="pill">連續答對：<b id="streak">0</b></div>
@@ -138,7 +138,7 @@
     <section class="card">
       <div class="tip" id="tip">
         提示會顯示在這裡（答錯或按下一題後出現）。<br>
-        <span class="muted">測驗模式為「百分制」：滿分 100，做幾題都以 100 分為基準。</span>
+        <span class="muted">測驗模式為「百分制」：答對加分、答錯不扣分。</span>
       </div>
     </section>
 
@@ -150,7 +150,7 @@
     </section>
 
     <footer>
-      練習模式：答對 +10、答錯 −5 ｜ 測驗模式：滿分 100，<span class="muted">每題 = 100 ÷ 題數、錯題扣該值的一半</span>。
+      練習模式：<b>不計分</b> ｜ 測驗模式：<b>滿分 100</b>（5/10/20/50 題對應每題 20/10/5/2 分；答對才加分）。
     </footer>
   </main>
 
@@ -158,15 +158,15 @@
     // 狀態
     let mode = 'practice';                 // 'practice' | 'exam'
     let targetType = '混合';
-    let examTotal = 5;
+    let examTotal = 10;                    // 預設 10 題
     let counter = 0;                       // 已作答題數（測驗）
-    let score = 0;                         // 分數（練習：整數；測驗：可能含小數，顯示時四捨五入）
+    let score = 0;                         // 測驗分數；練習模式顯示為「—」
     let streak = 0;
     let current = null;                    // {a,b,ans,tip,type}
     let locked = false;                    // 防重複點擊
     let wrongLog = [];                     // 測驗錯題回顧 [{q, your, ans, tip, type}]
 
-    // DOM 參照
+    // DOM
     const modeSelect = document.getElementById('modeSelect');
     const typeSelect = document.getElementById('typeSelect');
     const examCount = document.getElementById('examCount');
@@ -221,7 +221,7 @@
       updateUI();
       qEl.textContent = '請選擇模式與題型後按「開始」。';
       optsEl.innerHTML = '';
-      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">測驗模式為「百分制」：滿分 100，做幾題都以 100 分為基準。</span>';
+      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">測驗模式為「百分制」：答對加分、答錯不扣分。</span>';
       reviewSec.style.display = 'none';
     }
 
@@ -242,20 +242,24 @@
     }
     function updatePerQ(){
       if(mode==='exam'){
-        const perQ = 100/examTotal;
-        perQEl.textContent = `${trimScore(perQ)}（錯題扣 ${trimScore(perQ/2)}）`;
+        const perQ = perScoreFor(examTotal);
+        perQEl.textContent = `${perQ} 分／題`;
       }else{
         perQEl.textContent = '—';
       }
     }
     function renderScore(){
-      // 測驗模式顯示四捨五入後的整數；練習模式顯示原值
-      const shown = (mode==='exam') ? Math.round(score) : score;
-      scoreEl.textContent = shown;
+      scoreEl.textContent = (mode==='exam') ? Math.round(score) : '—';
     }
-    function trimScore(x){
-      // 顯示友善：最多 2 位小數，去除多餘 0
-      return (+x.toFixed(2)).toString();
+
+    // 每題配分（固定 5/10/20/50 題）
+    function perScoreFor(n){
+      if(n===5) return 20;
+      if(n===10) return 10;
+      if(n===20) return 5;
+      if(n===50) return 2;
+      // 以防萬一（不在選項內）
+      return +(100/n).toFixed(2);
     }
 
     // 出題流程
@@ -272,7 +276,7 @@
       updateProgress();
     }
 
-    // 混合時使用的題型權重（避免幾乎都拆分）
+    // 混合時的題型權重（避免幾乎都拆分）
     function weightedPick(){
       const bag = [
         '平方差','平方差','平方差',
@@ -410,32 +414,21 @@
       const all = Array.from(document.querySelectorAll('button.option'));
       const correctBtn = all.find(b => Number(b.textContent) === current.ans);
 
-      if(mode === 'exam'){
-        const perQ = 100 / examTotal;      // 每題配分（百分制）
-        if(val === current.ans){
-          btn.classList.add('correct');
-          score += perQ; streak += 1;
-          tipEl.innerHTML = `✅ 答對！本題 +${trimScore(perQ)} 分　${streak>=3?`<span class="muted">🔥 連對 ${streak} 題！</span>`:''}`;
-        }else{
-          btn.classList.add('wrong');
-          if(correctBtn) correctBtn.classList.add('correct');
-          score -= perQ/2; streak = 0;
-          tipEl.innerHTML = `❌ 答錯！本題 −${trimScore(perQ/2)} 分<br>解法：${current.tip}`;
-          wrongLog.push({ q:`${current.a} × ${current.b}`, type: current.type, your: val, ans: current.ans, tip: current.tip });
+      if(val === current.ans){
+        btn.classList.add('correct');
+        if(mode==='exam'){
+          const perQ = perScoreFor(examTotal);
+          score += perQ; // 答對才加分
         }
-        // 進位處理（避免浮點殘差）
-        score = +score.toFixed(4);
-      } else {
-        // 練習模式（舊規則）
-        if(val === current.ans){
-          btn.classList.add('correct');
-          score += 10; streak += 1;
-          tipEl.innerHTML = `✅ 答對！<span class="muted">+10 分</span>　${streak>=3?`<span class="muted">🔥 連對 ${streak} 題！</span>`:''}`;
-        }else{
-          btn.classList.add('wrong');
-          if(correctBtn) correctBtn.classList.add('correct');
-          score -= 5; streak = 0;
-          tipEl.innerHTML = `❌ 答錯！<br>解法：${current.tip}　<span class="muted">（−5 分）</span>`;
+        streak += 1;
+        tipEl.innerHTML = `✅ 答對！${mode==='exam'?`本題 +${perScoreFor(examTotal)} 分　`:''}<span class="muted">🔥 連對 ${streak} 題！</span>`;
+      }else{
+        btn.classList.add('wrong');
+        if(correctBtn) correctBtn.classList.add('correct');
+        streak = 0;
+        tipEl.innerHTML = `❌ 答錯！<br>解法：${current.tip}`;
+        if(mode==='exam'){
+          wrongLog.push({ q:`${current.a} × ${current.b}`, type: current.type, your: val, ans: current.ans, tip: current.tip });
         }
       }
 
@@ -458,7 +451,7 @@
     function endExam(){
       locked = true;
       document.querySelectorAll('button.option').forEach(b=>b.disabled=true);
-      const finalScore = Math.round(score); // 結算顯示整數百分制
+      const finalScore = Math.round(score); // 百分制整數
       qEl.textContent = `測驗結束！你的分數：${finalScore} / 100（共 ${examTotal} 題）`;
       tipEl.innerHTML = `下方列出本次測驗的錯題與解法，回顧後可按「重置」重新開始。`;
       showReview();

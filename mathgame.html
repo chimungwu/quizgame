@@ -356,22 +356,32 @@
     function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     function gcd(x,y){ while(y){ [x,y]=[y,x%y]; } return x; }
 
-    // 對半×加倍步驟：以狀態陣列記錄，避免重複節點
-function halfDoubleSteps(a,b){
-  let x=a, y=b;
-  let states=[`${x}×${y}`];
-  let moves=0;
-  while(x%2===0 && y%2===0 && x>1 && moves<4){
-    x = x/2;
-    y = y*2;
+// 對半×加倍步驟：以狀態陣列記錄，避免重複節點
+function halfDoubleSteps(a, b) {
+  let x = a, y = b;
+  // 狀態紀錄陣列，先放入原始乘法
+  const states = [`${x}×${y}`];
+  let moves = 0;
+
+  // 條件：兩數皆為偶數，x > 1，限制最多 4 步，避免展開過長
+  while (x % 2 === 0 && y % 2 === 0 && x > 1 && moves < 4) {
+    x = x / 2;
+    y = y * 2;
+    moves++;
     states.push(`${x}×${y}`);
 
-    // 🚩 如果其中一個變成 10 或 100，就直接停止
-    if(x===10 || y===10 || x===100 || y===100){
+    // 🚩 如果其中一個數字變成整十或整百，就提早結束
+    if (x % 10 === 0 || y % 10 === 0 || x % 100 === 0 || y % 100 === 0) {
       break;
     }
   }
-  return { text: states.join(' → '), lastX:x, lastY:y };
+
+  // 回傳整個過程文字，以及最後的 x, y 值
+  return { 
+    text: states.join(' → '), 
+    lastX: x, 
+    lastY: y 
+  };
 }
 
 /**

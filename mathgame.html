@@ -11,200 +11,234 @@
   <title>兩位數乘法速算｜練習 & 測驗</title>
 
   <style>
-    /* ========== 全域變數與基礎樣式 ========== */
-    :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --txt: #e5e7eb;
-      --accent: #38bdf8;
-      --good: #22c55e;
-      --bad: #ef4444;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: linear-gradient(180deg, #0b1220, #0b1325 40%, #0b152a);
-      color: var(--txt);
-      display: flex;
-      min-height: 100vh;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .wrap { width: min(1000px, 100%); display: grid; gap: 16px; }
-    .card {
-      background: rgba(17, 24, 39, .85);
-      border: 1px solid #1f2937;
-      border-radius: 20px;
-      padding: 20px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-
-    h1 { margin: 0 0 6px; font-size: clamp(28px, 4vw, 40px); }
-    .sub { opacity: .95; font-size: 14px; margin-bottom: 12px; line-height: 1.6; }
-
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .pill {
-      padding: 8px 12px; border-radius: 999px;
-      background: #0b1220; border: 1px solid #1f2937; font-size: 14px;
-    }
-    .pill b { color: var(--accent); }
-
-    .question {
-      font-size: clamp(28px, 6vw, 44px);
-      text-align: center; padding: 16px; border-radius: 16px;
-      background: #0b1220; border: 1px solid #1f2937; letter-spacing: 1px;
-    }
-
-    .options {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-      /* 預留下方間距，避免覆蓋控制列（行動裝置） */
-      margin-bottom: 6px;
-    }
-    button.option {
-      padding: 14px 10px; font-size: clamp(18px, 3.5vw, 22px);
-      border-radius: 14px; border: 1px solid #374151;
-      background: #0d1726; color: var(--txt); cursor: pointer;
-      transition: .15s transform, .15s background, .15s border;
-    }
-    button.option:hover { transform: translateY(-1px); background: #0f1c30; }
-    button.option.correct { border-color: rgba(34,197,94,.7); background: rgba(34,197,94,.1); }
-    button.option.wrong { border-color: rgba(239,68,68,.7); background: rgba(239,68,68,.08); }
-
-    .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-    .btn {
-      padding: 10px 14px; border-radius: 12px; border: 1px solid #374151;
-      background: #0d1726; color: var(--txt); cursor: pointer; font-size: 16px;
-    }
-    .btn.primary { border-color: var(--accent); background: rgba(56,189,248,.1); }
-    .btn.danger { border-color: #ef4444; background: rgba(239,68,68,.1); }
-    .btn.success { border-color: #22c55e; background: rgba(34,197,94,.1); }
-
-    .tip {
-      font-size: 14px; border-left: 3px solid var(--accent);
-      padding: 10px 12px; background: #0b1220; border-radius: 8px; opacity: .95;
-    }
-
-    .scoreboard { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
-    .muted { opacity: .7; }
-    footer { opacity: .7; font-size: 12px; text-align: center; }
-
-    .grid { display: grid; gap: 10px; }
-    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-
-    label { font-size: 14px; opacity: .95; }
-    select {
-      width: 100%; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid #374151; background: #0b1220; color: var(--txt);
-    }
-
-    /* ========== 回顧區塊 ========== */
-    #review { display: none; }
-    .review-title { font-size: 20px; margin: 0 0 8px; }
-    .review-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 12px; }
-    .review-list { display: grid; gap: 10px; max-height: 360px; overflow: auto; padding-right: 6px; }
-    .review-item { border: 1px solid #374151; border-radius: 12px; padding: 12px; background: #0b1220; }
-    .review-item .q { font-size: 18px; margin-bottom: 6px; }
-    .review-item .you { color: var(--bad); }
-    .review-item .ans { color: var(--good); }
-    .review-item .how { font-size: 14px; opacity: .9; }
-    .empty { opacity: .8; padding: 8px 0; }
-
-    a { color: #38bdf8; text-decoration: none; }
-/* === Mobile-friendly 基礎強化：全域觸控體驗 === */
+/* ========== 全域變數與基礎樣式（清新藍綠） ========== */
 :root{
-  --tap-min: 48px;  /* 最小觸控高度 */
+  /* 主題色票 */
+  --bg:            #f2fbfd;   /* 網頁背景（很淡的藍綠白） */
+  --card:          #e0f7fa;   /* 卡片/題目底 */
+  --card-2:        #b2ebf2;   /* 次級底（選項/回顧） */
+  --card-3:        #a7e4eb;   /* hover/active 較深一點 */
+  --border:        #80deea;   /* 邊框 */
+  --txt:           #004d40;   /* 主要文字（深青） */
+  --txt-weak:      #006064;   /* 次要文字 */
+  --accent:        #00bcd4;   /* 強調色（青藍） */
+  --good:          #22c55e;   /* 正確 */
+  --bad:           #ef4444;   /* 錯誤 */
+
+  /* 觸控尺寸 */
+  --tap-min: 48px;
 }
-button, .btn, .option, select {
-  min-height: var(--tap-min);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background: linear-gradient(180deg, #f6fdff, var(--bg) 40%, #edf9fb);
+  color: var(--txt);
+  display:flex;
+  min-height:100vh;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.wrap{ width:min(1000px,100%); display:grid; gap:16px; }
+
+.card{
+  background: var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:20px;
+  backdrop-filter:saturate(1.05) blur(2px);
+  /* 淺色主題用柔和陰影 */
+  box-shadow: 0 6px 20px rgba(0,0,0,.08);
+}
+
+h1{ margin:0 0 6px; font-size:clamp(28px,4vw,40px); }
+.sub{ opacity:.95; font-size:14px; margin-bottom:12px; line-height:1.6; color:var(--txt-weak); }
+
+.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+.pill{
+  padding:8px 12px; border-radius:999px;
+  background: #e8fbfe;
+  border:1px solid var(--border);
+  font-size:14px; color:var(--txt-weak);
+}
+.pill b{ color:var(--accent); }
+
+/* 題目卡片 */
+.question{
+  font-size:clamp(28px,6vw,44px);
+  text-align:center; padding:16px; border-radius:16px;
+  background: var(--card);
+  border:1px solid var(--border);
+  letter-spacing:1px;
+  color: var(--txt);
+}
+
+/* 選項區（維持 2 欄） */
+.options{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
+  margin-bottom:6px; /* 避免被上方 sticky 擋到 */
+}
+
+button.option{
+  padding:14px 10px; font-size:clamp(18px,3.5vw,22px);
+  border-radius:14px;
+  border:1px solid var(--border);
+  background: var(--card-2);
+  color: var(--txt-weak);
+  cursor:pointer;
+  transition:.15s transform,.15s background,.15s border;
+}
+button.option:hover{ transform:translateY(-1px); background: var(--card-3); }
+button.option.correct{ border-color:rgba(34,197,94,.7); background:rgba(34,197,94,.15); color:#0b3d1d; }
+button.option.wrong{ border-color:rgba(239,68,68,.7); background:rgba(239,68,68,.12); color:#7a1e1e; }
+
+/* 控制按鈕 */
+.controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.btn{
+  padding:10px 14px; border-radius:12px;
+  border:1px solid var(--border);
+  background: #d8f4f8;
+  color: var(--txt);
+  cursor:pointer; font-size:16px;
+  transition: .15s background, .15s transform;
+}
+.btn:hover{ background:#cdeff4; transform:translateY(-1px); }
+
+.btn.primary{ border-color: var(--accent); background: rgba(0,188,212,.12); color:#015a63; }
+.btn.danger{ border-color: var(--bad); background: rgba(239,68,68,.12); color:#7a1e1e; }
+.btn.success{ border-color: var(--good); background: rgba(34,197,94,.12); color:#0b3d1d; }
+
+/* 提示區 */
+.tip{
+  font-size:14px;
+  border-left:3px solid var(--accent);
+  padding:10px 12px;
+  background:#e8fbfe;
+  border-radius:8px;
+  color:var(--txt-weak);
+  opacity:.95;
+}
+
+.scoreboard{ display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap; }
+.muted{ opacity:.7; }
+footer{ opacity:.7; font-size:12px; text-align:center; color:var(--txt-weak); }
+
+.grid{ display:grid; gap:10px; }
+.grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+
+label{ font-size:14px; opacity:.95; color:var(--txt-weak); }
+select{
+  width:100%; padding:10px 12px; border-radius:10px;
+  border:1px solid var(--border);
+  background:#e8fbfe;
+  color:var(--txt);
+}
+
+/* ========== 回顧區塊 ========== */
+#review{ display:none; }
+.review-title{ font-size:20px; margin:0 0 8px; color:var(--txt); }
+.review-actions{ display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 12px; }
+.review-list{ display:grid; gap:10px; max-height:360px; overflow:auto; padding-right:6px; }
+.review-item{
+  border:1px solid var(--border);
+  border-radius:12px; padding:12px;
+  background: var(--card-2);
+  color: var(--txt-weak);
+}
+.review-item .q{ font-size:18px; margin-bottom:6px; color:var(--txt); }
+.review-item .you{ color:var(--bad); }
+.review-item .ans{ color:var(--good); }
+.review-item .how{ font-size:14px; opacity:.9; color:var(--txt-weak); }
+.empty{ opacity:.8; padding:8px 0; color:var(--txt-weak); }
+
+a{ color:#00838f; text-decoration:none; }
+
+/* === Mobile-friendly 基礎強化：全域觸控體驗 === */
+button, .btn, .option, select{
+  min-height:var(--tap-min);
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
 button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-visible{
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 14px;
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+  border-radius:14px;
 }
 
 /* 行為：手機沒有 hover，用 active/pressed 給回饋 */
-@media (hover: none) {
-  button.option:hover{ transform: none; background:#0d1a2b; }
-  button.option:active{ transform: scale(0.98); background:#0f1c30; }
+@media (hover:none){
+  button.option:hover{ transform:none; background: var(--card-2); }
+  button.option:active{ transform:scale(0.98); background: var(--card-3); }
 }
 
-/* === 小尺寸斷點：≤ 480px 時調整版面與尺寸 === */
-@media (max-width: 480px){
-  body{ padding: max(12px, env(safe-area-inset-left)); }
-  .wrap{ gap: 12px; }
+/* === 小尺寸斷點：≤ 480px === */
+@media (max-width:480px){
+  body{ padding:max(12px, env(safe-area-inset-left)); }
+  .wrap{ gap:12px; }
 
-  /* 卡片內邊距微增、圓角維持視覺一致 */
-  .card{ padding: 16px; border-radius: 18px; }
+  .card{ padding:16px; border-radius:18px; }
 
-  /* 上方三欄控件改單欄滿版 */
-  .grid.cols-3{ grid-template-columns: 1fr; gap: 12px; }
-  label{ font-size: 15px; }
+  .grid.cols-3{ grid-template-columns:1fr; gap:12px; }
+  label{ font-size:15px; }
   select{
-    font-size: 16px;  /* iOS 16px 可避免自動放大 */
-    padding: 14px 12px;
-    border-radius: 12px;
+    font-size:16px; /* iOS 16px 避免自動放大 */
+    padding:14px 12px; border-radius:12px;
   }
 
-  /* 狀態 pill 允許換行不擠字 */
-  .row{ gap: 8px; }
+  .row{ gap:8px; }
   .pill{
-    font-size: 15px;
-    padding: 8px 12px;
-    line-height: 1.3;
-    white-space: normal;
+    font-size:15px; padding:8px 12px;
+    line-height:1.3; white-space:normal;
   }
+
   .options{
-    grid-template-columns: repeat(2, 1fr); /* 變回兩欄 */
-    gap: 10px; /* 行距、列距自己調整 */
-  }  
-  
+    grid-template-columns:repeat(2,1fr); gap:10px;
+  }
+
   button.option{
-    font-size: 18px;
-    padding: 16px 14px;
-    border-radius: 16px;
+    font-size:18px; padding:16px 14px; border-radius:16px;
   }
 
-  /* 控制鈕：自動撐滿一列，易點 */
-  .controls{ gap: 12px; }
+  .controls{ gap:12px; }
   .controls .btn{
-    flex: 1 1 auto;         /* 讓每顆按鈕等寬滿版 */
-    font-size: 17px;
-    padding: 14px 16px;
-    border-radius: 14px;
+    flex:1 1 auto;
+    font-size:17px;
+    padding:14px 16px;
+    border-radius:14px;
   }
 
-  /* 提示字再大一點，易讀 */
-  .tip{ font-size: 15px; padding: 12px; }
+  .tip{ font-size:15px; padding:12px; }
 
-  /* 錯題回顧：卡片易讀、列表較高可滑動 */
-  .review-title{ font-size: 18px; }
-  .review-list{ max-height: 50vh; }
-  .review-item{ padding: 12px; }
-  .review-item .q{ font-size: 16px; }
-  .review-item .how{ font-size: 14px; }
+  .review-title{ font-size:18px; }
+  .review-list{ max-height:50vh; }
+  .review-item{ padding:12px; }
+  .review-item .q{ font-size:16px; }
+  .review-item .how{ font-size:14px; }
 }
 
-/* === 中小尺寸（≤ 768px）：兩欄仍嫌擠時統一單欄 === */
-@media (max-width: 768px){
-  .options{ grid-template-columns: 1fr; }
-  .controls .btn{ min-width: 44%; } /* 兩顆時也能並排 */
+/* === 中小尺寸（≤ 768px）=== */
+@media (max-width:768px){
+  /* 如果你想讓平板仍保持兩欄，可以註解下一行 */
+  .options{ grid-template-columns:1fr; }
+  .controls .btn{ min-width:44%; }
 }
 
-/* === 小強化：讓控制區在長頁面時更易觸達（非必需） === */
-@media (max-width: 768px){
+/* === 讓控制區在長頁面時更易觸達（明亮版） === */
+@media (max-width:768px){
   .scoreboard{
-    position: sticky; top: 8px; z-index: 5;
-    background: linear-gradient(180deg, rgba(17,24,39,.95), rgba(17,24,39,.80));
-    border-radius: 14px; padding: 8px;
+    position:sticky; top:8px; z-index:5;
+    background: linear-gradient(180deg, rgba(224,247,250,.95), rgba(224,247,250,.85));
+    border-radius:14px; padding:8px;
     backdrop-filter: blur(6px);
+    border:1px solid var(--border);
   }
 }
+
   </style>
 </head>
 

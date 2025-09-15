@@ -176,20 +176,32 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   }
 }
 @media (max-width: 480px){
-  /* 讓頁面能捲動（sticky 才有意義） */
+  /* 讓頁面可以正常捲動，別用 flex 置中整頁 */
   body{ display:block; }
 
-  /* 把 sticky 放在可捲動的上下文裡 */
-  .row.controls{
-    position: sticky;
-    bottom: 8px;
-    z-index: 10;
+  /* 底部預留空間，避免被浮動按鈕列蓋住 */
+  .wrap{ padding-bottom: 88px; } /* 依你控制列高度調整 */
 
-    background: rgba(11,18,32,.85);
+  .row.controls{
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 1000;
+
+    background: rgba(11,18,32,.92);
     backdrop-filter: blur(8px);
     padding: 10px;
     border-radius: 14px;
     border: 1px solid #1f2937;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  /* 讓三顆按鈕在手機上好點、等寬 */
+  .row.controls .btn{
+    flex:1 1 auto;
+    min-height: 48px;
+    font-size: 17px;
   }
 }
   </style>

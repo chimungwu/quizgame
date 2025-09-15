@@ -358,11 +358,18 @@
 
     // 對半×加倍步驟：以狀態陣列記錄，避免重複節點
 function halfDoubleSteps(a,b){
-  let x=a, y=b, states=[`${x}×${y}`];
+  let x=a, y=b;
+  let states=[`${x}×${y}`];
   let moves=0;
   while(x%2===0 && y%2===0 && x>1 && moves<4){
-    x = x/2; y = y*2; moves++;
+    x = x/2;
+    y = y*2;
     states.push(`${x}×${y}`);
+
+    // 🚩 如果其中一個變成 10 或 100，就直接停止
+    if(x===10 || y===10 || x===100 || y===100){
+      break;
+    }
   }
   return { text: states.join(' → '), lastX:x, lastY:y };
 }

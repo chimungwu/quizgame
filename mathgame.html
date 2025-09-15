@@ -176,26 +176,17 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
   }
 }
 
-@media (max-width: 480px){
-  /* 練習模式：把下一題放在題目下方、滿版好按 */
-  body[data-mode="practice"] #nextSlot{ margin-top: 10px; }
-  body[data-mode="practice"] #nextSlot #btnNext{
-    position: static !important; /* 取消你之前的 fixed */
-    display: block;
-    width: 100%;
-    min-height: 52px;
-    font-size: 18px;
-    padding: 16px 18px;
-    border-radius: 16px;
-    background: rgba(13,23,38,.95);
-    border: 1px solid #38bdf8;
-    box-shadow: 0 10px 28px rgba(0,0,0,.35);
-  }
-
-  /* 上方控制列不再被覆蓋（可略小一點預留空間） */
-  body[data-mode="practice"] .scoreboard{ margin-bottom: 0; }
-  body[data-mode="practice"] .wrap{ padding-bottom: 0; }
-}
+    /* ↓ 把這段貼在 style 的最後、</style> 之前 ↓ */
+    @media (max-width: 480px){
+      .row.controls{
+        position: sticky; bottom: 0; z-index: 10;
+        background: rgba(11,18,32,.85);
+        backdrop-filter: blur(8px);
+        padding: 10px;
+        border-radius: 14px;
+        border: 1px solid #1f2937;
+      }
+    }
   </style>
 </head>
 <body>
@@ -262,7 +253,6 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     <section class="card" id="play">
       <div id="question" class="question">請選擇模式與題型後按「開始」。</div>
       <div id="options" class="options"></div>
-      <div id="nextSlot"></div> <!-- ← 新增：下一題的插槽 -->
     </section>
 
     <!-- 3. 提示 -->
@@ -345,27 +335,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     btnNext.addEventListener('click', () => { if(!locked) newQuestion(); });
     btnReset.addEventListener('click', resetAll);
     btnExport.addEventListener('click', exportWrongCSV);
-// 若你沒加 HTML 插槽，可動態建立：
-// document.getElementById('options').insertAdjacentHTML('afterend', '<div id="nextSlot"></div>');
-
-const controlsRow = document.querySelector('.row.controls');
-const btnNext = document.getElementById('btnNext');
-
-function relocateNextBtn(){
-  const slot = document.getElementById('nextSlot');
-  if(!slot) return; // 沒有插槽就略過
-
-  if(mode === 'practice'){
-    if(btnNext.parentElement !== slot){
-      slot.appendChild(btnNext);  // 移到題目下方
-    }
-  }else{
-    if(btnNext.parentElement !== controlsRow){
-      // 移回控制列（擺在 Reset 之前，維持 Start / Next / Reset 的直覺順序）
-      controlsRow.insertBefore(btnNext, document.getElementById('btnReset'));
-    }
-  }
-}
+    
     // 主流程
     function start(){
       score = 0; streak = 0; counter = 0; wrongLog = [];
@@ -384,21 +354,15 @@ function relocateNextBtn(){
       reviewSec.style.display = 'none';
     }
     
-// 你的 updateUI() 結尾加兩行（若已加 data-mode 請保留）
-function refreshModeFlag(){ document.body.setAttribute('data-mode', mode); }
-
-function updateUI(){
+  function updateUI(){
   modeLabel.textContent = (mode==='practice'?'練習':'測驗');
   typeLabel.textContent = targetType;
   updateProgress();
   renderScore();
   streakEl.textContent = streak;
   refreshModeFlag();   // 保持 data-mode 正確
-  relocateNextBtn();   // ← 依模式搬動按鈕
 }
 
-// 初始化時也跑一次（避免初載入未搬動）
-relocateNextBtn();
     function updateProgress(){
       if(mode==='exam'){
         progressEl.textContent = `${counter}/${examTotal}`;

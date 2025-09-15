@@ -113,6 +113,99 @@
     .empty { opacity: .8; padding: 8px 0; }
 
     a { color: #38bdf8; text-decoration: none; }
+/* === Mobile-friendly 基礎強化：全域觸控體驗 === */
+:root{
+  --tap-min: 48px;  /* 最小觸控高度 */
+}
+button, .btn, .option, select {
+  min-height: var(--tap-min);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+/* 行為：手機沒有 hover，用 active/pressed 給回饋 */
+@media (hover: none) {
+  button.option:hover{ transform: none; background:#0d1a2b; }
+  button.option:active{ transform: scale(0.98); background:#0f1c30; }
+}
+
+/* === 小尺寸斷點：≤ 480px 時調整版面與尺寸 === */
+@media (max-width: 480px){
+  body{ padding: max(12px, env(safe-area-inset-left)); }
+  .wrap{ gap: 12px; }
+
+  /* 卡片內邊距微增、圓角維持視覺一致 */
+  .card{ padding: 16px; border-radius: 18px; }
+
+  /* 上方三欄控件改單欄滿版 */
+  .grid.cols-3{ grid-template-columns: 1fr; gap: 12px; }
+  label{ font-size: 15px; }
+  select{
+    font-size: 16px;  /* iOS 16px 可避免自動放大 */
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+
+  /* 狀態 pill 允許換行不擠字 */
+  .row{ gap: 8px; }
+  .pill{
+    font-size: 15px;
+    padding: 8px 12px;
+    line-height: 1.3;
+    white-space: normal;
+  }
+
+  /* 選項：單欄滿版、大按鈕、好點 */
+  .options{
+    grid-template-columns: 1fr; /* 2 欄 → 1 欄 */
+    gap: 12px;
+  }
+  button.option{
+    font-size: 18px;
+    padding: 16px 14px;
+    border-radius: 16px;
+  }
+
+  /* 控制鈕：自動撐滿一列，易點 */
+  .controls{ gap: 12px; }
+  .controls .btn{
+    flex: 1 1 auto;         /* 讓每顆按鈕等寬滿版 */
+    font-size: 17px;
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  /* 提示字再大一點，易讀 */
+  .tip{ font-size: 15px; padding: 12px; }
+
+  /* 錯題回顧：卡片易讀、列表較高可滑動 */
+  .review-title{ font-size: 18px; }
+  .review-list{ max-height: 50vh; }
+  .review-item{ padding: 12px; }
+  .review-item .q{ font-size: 16px; }
+  .review-item .how{ font-size: 14px; }
+}
+
+/* === 中小尺寸（≤ 768px）：兩欄仍嫌擠時統一單欄 === */
+@media (max-width: 768px){
+  .options{ grid-template-columns: 1fr; }
+  .controls .btn{ min-width: 44%; } /* 兩顆時也能並排 */
+}
+
+/* === 小強化：讓控制區在長頁面時更易觸達（非必需） === */
+@media (max-width: 768px){
+  .scoreboard{
+    position: sticky; top: 8px; z-index: 5;
+    background: linear-gradient(180deg, rgba(17,24,39,.95), rgba(17,24,39,.80));
+    border-radius: 14px; padding: 8px;
+    backdrop-filter: blur(6px);
+  }
+}
   </style>
 </head>
 

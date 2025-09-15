@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>兩位數乘法速算｜練習 & 測驗（簡單百分制）</title>
+  <title>兩位數乘法速算｜練習 & 測驗（簡單百分制＋CSV匯出）</title>
   <style>
     :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --good:#22c55e; --bad:#ef4444; }
     *{box-sizing:border-box}
@@ -41,6 +41,7 @@
     }
     .btn.primary{border-color:var(--accent); background:rgba(56,189,248,.1)}
     .btn.danger{border-color:#ef4444; background:rgba(239,68,68,.1)}
+    .btn.success{border-color:#22c55e; background:rgba(34,197,94,.1)}
     .tip{
       font-size:14px; border-left:3px solid var(--accent); padding:10px 12px; background:#0b1220; border-radius:8px; opacity:.95
     }
@@ -58,6 +59,7 @@
     /* 回顧區塊 */
     #review{display:none}
     .review-title{font-size:20px; margin:0 0 8px}
+    .review-actions{display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 12px}
     .review-list{display:grid; gap:10px; max-height:360px; overflow:auto; padding-right:6px}
     .review-item{
       border:1px solid #374151; border-radius:12px; padding:12px; background:#0b1220;
@@ -76,7 +78,7 @@
       <h1>🎮 100 以內兩位數乘法速算｜練習 & 測驗</h1>
       <div class="sub">
         <b>練習模式：</b>不計分，只練習題型與解法提示。<br>
-        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；<u>答對加分、答錯不扣分</u>；結束後提供錯題回顧。
+        <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分；<u>答對才加分，答錯不扣分</u>；結束後提供錯題回顧與 CSV 匯出。
       </div>
 
       <div class="grid cols-3">
@@ -138,13 +140,18 @@
     <section class="card">
       <div class="tip" id="tip">
         提示會顯示在這裡（答錯或按下一題後出現）。<br>
-        <span class="muted">測驗模式為「百分制」：答對加分、答錯不扣分。</span>
+        <span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法、或「先提公因數」。</span>
       </div>
     </section>
 
     <!-- 4. 錯題回顧（測驗結束才顯示） -->
     <section class="card" id="review">
-      <h3 class="review-title">📝 錯題回顧（含解法與正確答案）</h3>
+      <div class="review-head">
+        <h3 class="review-title">📝 錯題回顧（含解法與正確答案）</h3>
+        <div class="review-actions">
+          <button class="btn success" id="btnExport">匯出錯題 CSV</button>
+        </div>
+      </div>
       <div id="reviewList" class="review-list"></div>
       <div class="empty" id="reviewEmpty">太強了！這次測驗沒有錯題。</div>
     </section>
@@ -164,7 +171,7 @@
     let streak = 0;
     let current = null;                    // {a,b,ans,tip,type}
     let locked = false;                    // 防重複點擊
-    let wrongLog = [];                     // 測驗錯題回顧 [{q, your, ans, tip, type}]
+    let wrongLog = [];                     // 測驗錯題回顧 [{q, type, your, ans, tip}]
 
     // DOM
     const modeSelect = document.getElementById('modeSelect');
@@ -185,6 +192,7 @@
     const btnStart = document.getElementById('btnStart');
     const btnNext  = document.getElementById('btnNext');
     const btnReset = document.getElementById('btnReset');
+    const btnExport = document.getElementById('btnExport');
 
     // 事件
     modeSelect.addEventListener('change', () => {
@@ -206,6 +214,7 @@
     btnStart.addEventListener('click', start);
     btnNext.addEventListener('click', () => { if(!locked) newQuestion(); });
     btnReset.addEventListener('click', resetAll);
+    btnExport.addEventListener('click', exportWrongCSV);
 
     // 主流程
     function start(){
@@ -221,7 +230,7 @@
       updateUI();
       qEl.textContent = '請選擇模式與題型後按「開始」。';
       optsEl.innerHTML = '';
-      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">測驗模式為「百分制」：答對加分、答錯不扣分。</span>';
+      tipEl.innerHTML = '提示會顯示在這裡（答錯或按下一題後出現）。<br><span class="muted">倍數/一半會依情況給：對半×加倍、25/50 法、或「先提公因數」。</span>';
       reviewSec.style.display = 'none';
     }
 
@@ -243,7 +252,7 @@
     function updatePerQ(){
       if(mode==='exam'){
         const perQ = perScoreFor(examTotal);
-        perQEl.textContent = `${perQ} 分／題`;
+        perQEl.textContent = `${perQ} 分／題（滿分 100）`;
       }else{
         perQEl.textContent = '—';
       }
@@ -258,7 +267,6 @@
       if(n===10) return 10;
       if(n===20) return 5;
       if(n===50) return 2;
-      // 以防萬一（不在選項內）
       return +(100/n).toFixed(2);
     }
 
@@ -313,11 +321,12 @@
           a = m-n; b = m+n;
         }
         else if(type==='倍數/一半'){
-          if(Math.random()<0.5){ a = randPick([25,50]); b = randInt(10,99); }
+          // 盡量生成容易呈現的例子
+          if(Math.random()<0.4){ a = randPick([25,50]); b = randInt(10,99); }
           else{
-            const base = randPick([12,14,15,16,18]);
-            const k = randPick([2,3,4,5]);
-            a = base; b = Math.min(99, base*k); if(b<10) b=base*2;
+            // 偏向偶數或有公因數
+            a = randPick([12,14,15,16,18,20,24,28,30,32,36,40,42,44,48]);
+            b = randPick([12,14,15,16,18,20,24,28,30,32,36,40,42,44,48]);
           }
         }
         // 拆分 or 其他：任意兩位數
@@ -338,42 +347,71 @@
       if(type==='接近100')   return (a>=90 && b>=90);
       if(type==='尾數互補')  return (Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10));
       if(type==='平方差')    return (Math.abs(a-b)===2 && ((a+b)%2===0));
-      if(type==='倍數/一半') return (a%25===0 || b%25===0 || a%50===0 || b%50===0 || a%b===0 || b%a===0);
+      if(type==='倍數/一半') return ( (a%2===0 && b%2===0) || (a%25===0 || b%25===0 || a%50===0 || b%50===0) || gcd(a,b)>1 );
       return true;
     }
 
     // 工具
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function gcd(x,y){ while(y){ [x,y]=[y,x%y]; } return x; }
 
-    // 技巧提示
+    // 產生「對半×加倍」步驟（最多 4 步避免太長）
+    function halfDoubleSteps(a,b){
+      let x=a, y=b, steps=[];
+      let moves=0;
+      while(x%2===0 && y%2===0 && x>1 && moves<4){
+        steps.push(`${x}×${y} → ${x/2}×${y*2}`);
+        x/=2; y*=2; moves++;
+      }
+      return steps.length ? (`對半×加倍：` + steps.join(' → ')) : '';
+    }
+
+    // 技巧提示（重點調整：倍數/一半更精準）
     function decideTip(a,b){
+      // 尾數 5 平方
       if(a===b && a%10===5){
         const head = Math.floor(a/10);
         return { tip:`[尾數 5] ${head}×(${head}+1)=${head*(head+1)}，尾巴 25 → ${a}×${a}`, type:'尾數5平方' };
       }
+      // 平方
       if(a===b){
         const t = Math.round(a/10)*10;
         const d = Math.abs(a - t);
         return { tip:`[平方] ( ${t}±${d} )² = ${t}² ± 2×${t}×${d} + ${d}²`, type:'平方' };
       }
+      // 尾數互補
       if(Math.floor(a/10)===Math.floor(b/10) && (a%10 + b%10===10)){
         const t = Math.floor(a/10);
         const u = a%10, v = b%10;
         return { tip:`[尾數互補] 前面：${t}×(${t}+1)=${t*(t+1)}；後面：${u}×${v}（兩位數補零）`, type:'尾數互補' };
       }
+      // 接近100
       if(a>=90 && b>=90){
         const da = 100 - a, db = 100 - b;
         const front = 100 - (da + db);
         return { tip:`[接近100] 前面：100−(${da}+${db})=${front}；後面：${da}×${db}（兩位數補零）`, type:'接近100' };
       }
+      // 平方差
       if( Math.abs(a-b)===2 && ((a+b)%2===0) ){
         const m = (a+b)/2, n = Math.abs(a-b)/2;
         return { tip:`[平方差] ( ${m}−${n} )( ${m}+${n} ) = ${m}² − ${n}²`, type:'平方差' };
       }
-      if(a%25===0 || b%25===0 || a%50===0 || b%50===0 || a%b===0 || b%a===0){
-        return { tip:`[倍數/一半] 先用 25=100÷4、50=100÷2，或先做可整除的乘除再算。`, type:'倍數/一半' };
+      // 倍數/一半（細分三種）
+      const g = gcd(a,b);
+      if(a%2===0 && b%2===0){
+        const steps = halfDoubleSteps(a,b);
+        return { tip:`[倍數/一半] ${steps} → 乘積 ${a*b}`, type:'倍數/一半' };
       }
+      if(a%25===0 || b%25===0 || a%50===0 || b%50===0){
+        return { tip:`[倍數/一半] 用整百思考：25=100÷4、50=100÷2，先換算再乘更快。`, type:'倍數/一半' };
+      }
+      if(g>1){
+        const m = a/g, n = b/g;
+        return { tip:`[倍數/一半] 先提公因數：${a}×${b} = (${g}×${m})×(${g}×${n}) = ${g}²×(${m}×${n}) = ${g*g}×${m*n} = ${a*b}`, type:'倍數/一半' };
+      }
+
+      // 拆分 fallback
       const aT=Math.floor(a/10), aU=a%10, bT=Math.floor(b/10), bU=b%10;
       return { tip:`[拆分] (${aT}0+${aU})×(${bT}0+${bU}) → 十位×十位 + 十位×個位 + 個位×十位 + 個位×個位`, type:'拆分' };
     }
@@ -453,7 +491,7 @@
       document.querySelectorAll('button.option').forEach(b=>b.disabled=true);
       const finalScore = Math.round(score); // 百分制整數
       qEl.textContent = `測驗結束！你的分數：${finalScore} / 100（共 ${examTotal} 題）`;
-      tipEl.innerHTML = `下方列出本次測驗的錯題與解法，回顧後可按「重置」重新開始。`;
+      tipEl.innerHTML = `下方列出本次測驗的錯題與解法，可按「匯出錯題 CSV」。`;
       showReview();
     }
 
@@ -477,6 +515,32 @@
         reviewList.appendChild(div);
       });
       reviewSec.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // 匯出錯題 CSV
+    function exportWrongCSV(){
+      if(!wrongLog.length){
+        alert('這次測驗沒有錯題可匯出。');
+        return;
+      }
+      // 產生 CSV 內容（含標頭）
+      const header = ['題目','題型','你的答案','正確答案','解法'];
+      const rows = wrongLog.map(r => [r.q, r.type, String(r.your), String(r.ans), r.tip]);
+      const csv = [header, ...rows].map(row => row.map(csvEscape).join(',')).join('\r\n');
+      // 為了 Excel 正常顯示 UTF-8，加上 BOM
+      const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wrong_questions.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    function csvEscape(val){
+      const s = (val ?? '').toString().replace(/\r?\n/g,'  ');
+      return /[",]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
     }
   </script>
 </body>

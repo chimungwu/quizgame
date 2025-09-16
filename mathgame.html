@@ -224,6 +224,24 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
     border:1px solid var(--border);
   }
 }
+    /* 讓 <a class="btn"> 也有按鈕的外觀與手感 */
+a.btn{
+  display: inline-flex;           /* anchor 不是 button，要補 display */
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;          /* 保險起見再關閉底線 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 放在上方說明列時，留點間距 */
+.sub .btn{ margin-top: 6px; margin-right: 8px; }
+
+/* 手機版想更好按，可讓它滿版 */
+@media (max-width: 480px){
+  .sub .btn{ display: inline-flex; width: 100%; justify-content: center; }
+}
+
   </style>
 </head>
 
@@ -235,7 +253,7 @@ button:focus-visible, .btn:focus-visible, .option:focus-visible, select:focus-vi
       <div class="sub" style="color:#grey;">
         <b>練習模式：</b>不計分，只練習題型與解法提示。<br />
         <b>測驗模式（百分制）：</b>滿分 100；5 題×20 分、10 題×10 分、20 題×5 分、50 題×2 分。<br />
-        <a href="math-notes.html">概念說明（教學筆記）</a>
+        📘 <a href="math-notes.html">概念說明（教學筆記）</a>
         💻 程式設計：<a href="https://drwu.carrd.co" target="_blank">仨寶爸中醫博士吳啓銘</a>
       </div>
 

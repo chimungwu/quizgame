@@ -1,10 +1,11 @@
 {
+  "id": "./mathgame.html",
   "name": "兩位數乘法速算｜練習 & 測驗",
   "short_name": "兩位數乘法",
   "description": "100 以內兩位數乘法速算：練習/測驗、技巧提示、錯題回顧、CSV 匯出。",
   "lang": "zh-Hant",
-  "start_url": ".",
-  "scope": ".",
+  "start_url": "./mathgame.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#fdfdf9",
   "theme_color": "#00838f",

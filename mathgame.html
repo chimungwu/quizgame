@@ -921,6 +921,22 @@ if(mode==='exam'){
       const s = (val ?? '').toString().replace(/\r?\n/g, ' ');
       return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     }
+ //PWA
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      // 可選：偵測新版本，提醒使用者重整
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw && nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('有新版本可用，請重新整理以更新。');
+          }
+        });
+      });
+    }).catch(console.error);
+  });
+}
   </script>
 </body>
 </html>

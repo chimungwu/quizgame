@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>兩位數乘法速算｜概念說明</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#38bdf8; --muted:#9ca3af; --ok:#22c55e; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:linear-gradient(180deg,#0b1220,#0b1325 40%,#0b152a);
+      color:var(--txt);
+    }
+    /* --- 顶部導覽 --- */
+    .nav{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 16px; background:rgba(17,24,39,.9); backdrop-filter: blur(8px);
+      border-bottom:1px solid #1f2937;
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.5px}
+    .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 16px rgba(56,189,248,.6)}
+    .nav a{color:#cfe4ff; text-decoration:none; font-size:14px; padding:6px 10px; border-radius:10px; border:1px solid transparent}
+    .nav a:hover{background:#0b1220; border-color:#1f2937}
+    .nav .active{color:#e5f0ff; border-color:#1f2937; background:#0b1220}
+
+    .wrap{max-width:960px; margin:0 auto; padding:18px 16px 80px;}
+    h1{margin:8px 0 8px; font-size:clamp(26px,4vw,40px)}
+    p{line-height:1.75}
+    .sub{color:var(--muted); margin-bottom:16px}
+    .card{
+      background:rgba(17,24,39,.9); border:1px solid #1f2937; border-radius:16px; padding:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35); margin:12px 0;
+    }
+    h2{margin:12px 0; font-size:clamp(20px,3vw,28px)}
+    h3{margin:8px 0; font-size:clamp(18px,2.5vw,22px)}
+    code, kbd{background:#0b1220; border:1px solid #1f2937; border-radius:6px; padding:2px 6px; color:#d1d5db}
+    .hint{border-left:3px solid var(--accent); padding:10px 12px; background:#0b1220; border-radius:8px; color:#d1d5db}
+    .toc a{color:#93c5fd; text-decoration:none}
+    .ex{background:#0b1220; border:1px dashed #334155; border-radius:10px; padding:10px 12px; margin-top:8px; color:#d1d5db}
+    .grid{display:grid; gap:12px}
+    .grid.two{grid-template-columns:repeat(2,1fr)}
+    @media (max-width:720px){ .grid.two{grid-template-columns:1fr} }
+    ul{margin:0 0 0 1.2em}
+    footer{color:#9ca3af; font-size:13px; text-align:center; margin-top:28px}
+
+    .tag{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #1f2937; background:#0b1220; color:#cbd5e1; font-size:12px}
+    .ok{color:var(--ok)} .warn{color:var(--warn)}
+
+    /* 手機右下角的「返回練習」浮動按鈕 */
+    .back-fab{
+      position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom));
+      z-index:20; border-radius:9999px; border:1px solid #1f2937; 
+      background:rgba(13,23,38,.95); color:#e5e7eb; text-decoration:none;
+      padding:12px 16px; font-size:16px; min-height:48px; display:flex; align-items:center; gap:8px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .back-fab:active{transform:scale(.985); background:#0f1c30}
+    @media (min-width:721px){
+      .back-fab{ display:none; } /* 桌機不顯示 FAB，避免干擾 */
+    }
+    /* 內文頂部也放一顆返回按鈕（桌機/寬螢幕用） */
+    .back-link{
+      display:inline-flex; align-items:center; gap:8px;
+      color:#cfe4ff; text-decoration:none; font-size:14px; padding:6px 10px; border-radius:10px; border:1px solid #1f2937; background:#0b1220;
+    }
+    .back-link:hover{ background:#0d1726; }
+  </style>
+</head>
+<body>
+  <!-- 導覽列 -->
+  <nav class="nav">
+    <div class="brand"><span class="dot"></span>兩位數乘法速算</div>
+    <div class="links">
+      <a href="mathgame.html">練習</a>
+      <a href="math-notes.html" class="active" aria-current="page">概念說明</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <a class="back-link" href="mathgame.html" aria-label="返回練習">← 返回練習</a>
+
+    <header>
+      <h1>兩位數乘法速算｜概念說明</h1>
+      <p class="sub">這頁彙整練習系統用到的心算技巧與判斷原則，搭配小例題，讓你知道「為什麼這樣算」與「什麼時候這樣算最省力」。</p>
+      <nav class="card toc">
+        <strong>目錄</strong>
+        <ol>
+          <li><a href="#split">拆分法（分配律）</a></li>
+          <li><a href="#diffsq">平方差</a></li>
+          <li><a href="#near100">接近 100 法（Base-100/Nikhilam 思路）</a></li>
+          <li><a href="#comp10">尾數互補（個位和為 10、同十位）</a></li>
+          <li><a href="#five2">尾數 5 的平方</a></li>
+          <li><a href="#half-double">倍數／一半（含 20/25/50 整百法）</a></li>
+          <li><a href="#square">一般平方展開</a></li>
+          <li><a href="#gcd">先提公因數</a></li>
+          <li><a href="#when">選法判斷＆常見地雷</a></li>
+          <li><a href="#sheet">速查範例表</a></li>
+        </ol>
+      </nav>
+    </header>
+
+    <!-- 內容段落（與先前版本一致） -->
+    <section id="split" class="card">
+      <h2>1）拆分法（分配律） <span class="tag">任何情況都適用</span></h2>
+      <p>把兩位數拆成「十位 × 10 + 個位」，再用分配律展開。</p>
+      <div class="ex">
+        例：<code>(40+7)(30+2) = 40×30 + 40×2 + 7×30 + 7×2</code><br/>
+        也就是：<code>1200 + 80 + 210 + 14 = 1504</code>
+      </div>
+      <div class="hint"><b>何時用？</b> 不確定有沒有更快招時，這是最穩的通用法。</div>
+    </section>
+
+    <section id="diffsq" class="card">
+      <h2>2）平方差（<code>(m-n)(m+n)=m²-n²</code>）</h2>
+      <p>當兩數距離不大，且能寫成某個中數 <code>m</code> 的左右對稱（如 <code>m±n</code>），就能「平方減平方」。</p>
+      <div class="ex">
+        例：<code>49×51 = (50-1)(50+1) = 50² - 1² = 2500 - 1 = 2499</code>
+      </div>
+      <div class="hint"><span class="ok">建議：</span>差距 <code>2,4,6,8</code> 最順手。<span class="warn">避免：</span>如果其中有 20/25/50 這種「整百轉換」更快的數，優先用整百法（見第 6 節）。</div>
+    </section>
+
+    <section id="near100" class="card">
+      <h2>3）接近 100 法（Base-100 / Nikhilam 思路）</h2>
+      <p>兩數都接近 100 時超快：把兩數視為 <code>(100−a)(100−b)</code>。</p>
+      <div class="ex">
+        規則：<code>(100−a)(100−b) = 100×(100−a−b) + a×b</code><br/>
+        後半 <code>a×b</code> 以「兩位」補齊（必要時補零）。<br/><br/>
+        例：<code>96×97</code> → a=4, b=3<br/>
+        前半：<code>100−(4+3)=93</code>；後半：<code>4×3=12</code>（兩位）<br/>
+        結果：<code>9312</code>
+      </div>
+    </section>
+
+    <section id="comp10" class="card">
+      <h2>4）尾數互補（同十位、個位和為 10）</h2>
+      <p>兩數十位相同、個位數相加為 10（如 43×47、68×62），可用固定模板。</p>
+      <div class="ex">
+        規則：十位 <code>t</code>，個位 <code>u</code> 與 <code>v</code>，<code>u+v=10</code><br/>
+        <code>(10t+u)(10t+v) = [t×(t+1)] ×100 + (u×v)</code>（後兩位補齊）<br/><br/>
+        例：<code>43×47</code> → t=4, u=3, v=7<br/>
+        前半：<code>4×5=20</code>；後半：<code>3×7=21</code> → <code>2021</code>
+      </div>
+    </section>
+
+    <section id="five2" class="card">
+      <h2>5）尾數 5 的平方</h2>
+      <p>任何 <code>(10t+5)²</code> 都可套公式：前半 <code>t×(t+1)</code>，後半固定 <code>25</code>。</p>
+      <div class="ex">
+        例：<code>65²</code> → t=6<br/>
+        前半：<code>6×7=42</code>；後半：<code>25</code> → <code>4225</code>
+      </div>
+    </section>
+
+    <section id="half-double" class="card">
+      <h2>6）倍數／一半（含 20/25/50 整百法）</h2>
+      <div class="grid two">
+        <div>
+          <h3>6-1 對半 × 加倍</h3>
+          <p>兩數同為偶數時，先對半、再把另一邊加倍，直到更易收尾。</p>
+          <div class="ex">
+            例：<code>24×35 = 12×70 = 840</code>
+          </div>
+        </div>
+        <div>
+          <h3>6-2 整百法（最優先）</h3>
+          <p>遇到 20/25/50（或它們的倍數）時，可把它視為 <code>100/5、100/4、100/2</code>，讓另一數去除分母，直接轉成「100 × …」。</p>
+          <div class="ex">
+            <ul>
+              <li><code>25×48 = (100/4)×48 = 100×12 = 1200</code></li>
+              <li><code>50×62 = (100/2)×62 = 100×31 = 3100</code></li>
+              <li><code>20×35 = (100/5)×35 = 100×7 = 700</code></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="hint"><span class="ok">建議：</span>只要整除得漂亮，整百法通常比平方差、拆分更快。</div>
+    </section>
+
+    <section id="square" class="card">
+      <h2>7）一般平方展開（靠近整十）</h2>
+      <p>當要算 <code>a²</code> 時，找最近的整十 <code>t</code> 與差距 <code>d=|a−t|</code>：</p>
+      <div class="ex">
+        <code>(t±d)² = t² ± 2td + d²</code><br/><br/>
+        例：<code>34² = (30+4)² = 900 + 240 + 16 = 1156</code><br/>
+        例：<code>69² = (70−1)² = 4900 − 140 + 1 = 4761</code>
+      </div>
+    </section>
+
+    <section id="gcd" class="card">
+      <h2>8）先提公因數</h2>
+      <p>若 <code>a,b</code> 有公因數 <code>g</code>，令 <code>a=gm</code>、<code>b=gn</code>，先約簡後再算：</p>
+      <div class="ex">
+        <code>a×b = (gm)(gn) = g²(mn)</code><br/>
+        例：<code>36×28 = (4×9)(4×7) = 16×63 = 1008</code>
+      </div>
+    </section>
+
+    <section id="when" class="card">
+      <h2>9）怎麼選最快？（判斷＆地雷）</h2>
+      <ul>
+        <li><b>看到 20/25/50（或其倍數）</b>：優先用整百法（第 6-2 節）。</li>
+        <li><b>兩數對稱</b>、差距小：用平方差（第 2 節）。</li>
+        <li><b>兩數都 ≥90</b>：用接近 100 法（第 3 節）。</li>
+        <li><b>同十位、個位互補</b>：用尾數互補（第 4 節）。</li>
+        <li><b>平方且尾數 5</b>：用尾數 5 平方（第 5 節）。</li>
+        <li><b>兩數皆偶數</b>：先對半×加倍（第 6-1 節）。</li>
+        <li>其它或不確定：回到拆分法（第 1 節）。</li>
+      </ul>
+      <div class="hint"><span class="warn">地雷：</span>別硬把 25、50 這類「整百更快」的情形拿去做平方差；也避免把後兩位需要「補零」的規則忘了補。</div>
+    </section>
+
+    <section id="sheet" class="card">
+      <h2>10）速查範例表</h2>
+      <div class="grid two">
+        <div>
+          <h3>乘法</h3>
+          <ul>
+            <li><code>49×51 = 2500−1 = 2499</code>（平方差）</li>
+            <li><code>96×97 = 93｜12 → 9312</code>（接近 100）</li>
+            <li><code>43×47 = (4×5)｜(3×7)=20｜21 → 2021</code>（互補）</li>
+            <li><code>25×48 = 100×12 = 1200</code>（整百）</li>
+            <li><code>24×35 = 12×70 = 840</code>（對半×加倍）</li>
+          </ul>
+        </div>
+        <div>
+          <h3>平方</h3>
+          <ul>
+            <li><code>65² = 6×7｜25 → 4225</code>（尾數 5）</li>
+            <li><code>34² = 30² + 2×30×4 + 4² = 1156</code>（靠整十）</li>
+            <li><code>71² = (70+1)² = 4900 + 140 + 1 = 5041</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>© 兩位數乘法速算｜概念筆記　•　撰寫：吳啓銘醫師（阿銘醫師）</footer>
+  </main>
+
+  <!-- 手機用的右下角返回 FAB -->
+  <a class="back-fab" href="mathgame.html" aria-label="返回練習">← 返回練習</a>
+</body>
+</html>

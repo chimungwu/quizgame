@@ -40,7 +40,8 @@
 
 ## 🖥️ 線上體驗
 - 數學練習 👉 [chimungwu.github.io/quizgame](https://chimungwu.github.io/quizgame)  
-- 心算技巧練習 👉 [chimungwu.github.io/quizgame/mental.html](https://chimungwu.github.io/quizgame/mental.html)  
+- 心算技巧練習 👉 [chimungwu.github.io/quizgame/mental.html](https://chimungwu.github.io/quizgame/mental.html)
+- 二位數乘法速算測驗 👉 [chimungwu.github.io/quizgame/mathgame.html](https://chimungwu.github.io/quizgame/mathgame.html)  
 
 ---
 
